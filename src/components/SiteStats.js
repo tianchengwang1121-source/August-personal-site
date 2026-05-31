@@ -57,7 +57,7 @@ export default function SiteStats({ staticStats }) {
           </strong>
           <span>Page Views</span>
         </div>
-        <div className="footer-stat footer-stat-wide">
+        <div className="footer-stat footer-stat-online">
           <strong>{onlineTime}</strong>
           <span>Online</span>
         </div>
