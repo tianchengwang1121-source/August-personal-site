@@ -3,6 +3,62 @@ import Link from 'next/link'
 import Layout from '@/components/Layout'
 import { blogPosts } from '@/data/site'
 
+function BlogImage({ image, className = '' }) {
+  return (
+    <figure className={`blog-inline-image ${className}`}>
+      <Image
+        src={image.src}
+        alt={image.alt || image.caption}
+        width={image.width}
+        height={image.height}
+        sizes="(max-width: 760px) calc(100vw - 56px), 760px"
+      />
+      {image.caption && <figcaption>{image.caption}</figcaption>}
+    </figure>
+  )
+}
+
+function BlogBlock({ block }) {
+  if (block.type === 'paragraph') {
+    return <p className="blog-paragraph">{block.text}</p>
+  }
+
+  if (block.type === 'gallery') {
+    return (
+      <div className="blog-image-grid">
+        {block.images.map((image) => (
+          <BlogImage image={image} key={image.src} />
+        ))}
+      </div>
+    )
+  }
+
+  if (block.type === 'image') {
+    return <BlogImage image={block} />
+  }
+
+  return null
+}
+
+function BlogContent({ post }) {
+  if (!post.content) {
+    return <p className="blog-body">{post.body}</p>
+  }
+
+  return (
+    <div className="blog-content">
+      {post.content.map((section) => (
+        <section className="blog-story-section" key={section.title}>
+          <h2>{section.title}</h2>
+          {section.blocks.map((block, index) => (
+            <BlogBlock block={block} key={`${section.title}-${index}`} />
+          ))}
+        </section>
+      ))}
+    </div>
+  )
+}
+
 export default function BlogPost({ post }) {
   return (
     <Layout title={post.title}>
@@ -15,17 +71,25 @@ export default function BlogPost({ post }) {
             {post.date} · {post.location}
           </p>
           <h1>{post.title}</h1>
+          {post.tags && (
+            <div className="blog-detail-tags" aria-label="Post tags">
+              {post.tags.map((tag) => (
+                <span key={tag}>{tag}</span>
+              ))}
+            </div>
+          )}
         </div>
         <div className="blog-hero-image">
           <Image
             src={post.image}
             alt={post.title}
-            width={1600}
-            height={1060}
+            width={1350}
+            height={1800}
             priority
+            sizes="(max-width: 760px) calc(100vw - 56px), 920px"
           />
         </div>
-        <p className="blog-body">{post.body}</p>
+        <BlogContent post={post} />
       </article>
     </Layout>
   )

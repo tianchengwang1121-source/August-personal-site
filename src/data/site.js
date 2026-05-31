@@ -48,13 +48,83 @@ export const blogPosts = [
   },
   {
     slug: 'singapore-airshow',
-    title: '新加坡航展',
+    title: 'Singapore Airshow',
     date: '2026.2.7',
-    location: '新加坡',
+    location: 'Singapore',
     category: 'Blog',
-    image: '/images/blog/singapore-airshow.jpg',
-    excerpt: '这是一行测试文字，记录新加坡航展的所见。',
-    body: '这是一行测试正文，记录新加坡航展的所见。',
+    image: '/images/blog/singapore-airshow/cover.jpg',
+    excerpt: '期待了近一个月的新加坡航展旅程，从凌晨的 HKG 出发，到落地后的第一眼南洋印象。',
+    body: '期待了近一个月的新加坡航展旅程，从凌晨的 HKG 出发，到落地后的第一眼南洋印象。',
+    tags: ['aviation', 'airshow', 'photography', 'travel'],
+    content: [
+      {
+        type: 'section',
+        title: 'Departure',
+        blocks: [
+          {
+            type: 'image',
+            src: '/images/blog/singapore-airshow/1.jpg',
+            alt: '临走之前带个墨镜装酷哈哈哈',
+            caption: '临走之前带个墨镜装酷哈哈哈',
+            width: 1200,
+            height: 1600,
+          },
+          {
+            type: 'paragraph',
+            text: '期待了近一个月，新加坡航展终于要来啦。虽然是2月6号的飞机，但是依旧保留传统，提前一晚到达HKG进行航空摄影活动。很巧的是，好基友Peter也是明天的飞机，他前往台北旅行。',
+          },
+          {
+            type: 'gallery',
+            images: [
+              {
+                src: '/images/blog/singapore-airshow/2.jpg',
+                alt: '在凌晨的HKG合影！',
+                caption: '在凌晨的HKG合影！',
+                width: 1200,
+                height: 1600,
+              },
+              {
+                src: '/images/blog/singapore-airshow/3.jpg',
+                alt: '独享三个座位',
+                caption: '独享三个座位',
+                width: 1200,
+                height: 1600,
+              },
+            ],
+          },
+          {
+            type: 'paragraph',
+            text: '在机场过夜，对体能的消耗是巨大的。幸好，飞往新加坡的早班机上座率并不高，在机上美美地睡了一觉，睁眼便已经来到了马六甲海峡上空。我的新加坡之旅就要开始啦！',
+          },
+          {
+            type: 'image',
+            src: '/images/blog/singapore-airshow/4.jpg',
+            alt: '俯瞰新加坡城区',
+            caption: '俯瞰新加坡城区',
+            width: 1200,
+            height: 1600,
+          },
+        ],
+      },
+      {
+        type: 'section',
+        title: '新加坡初印象',
+        blocks: [
+          {
+            type: 'paragraph',
+            text: '落地新加坡，先来到Chinatown体验一下特色的南洋美食，',
+          },
+          {
+            type: 'image',
+            src: '/images/blog/singapore-airshow/5.jpg',
+            alt: '福建炒面（7新币，中规中矩）',
+            caption: '福建炒面（7新币，中规中矩）',
+            width: 1200,
+            height: 1600,
+          },
+        ],
+      },
+    ],
   },
   {
     slug: 'taipei-trip',

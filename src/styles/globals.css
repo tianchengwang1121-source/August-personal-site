@@ -592,6 +592,27 @@ p {
   line-height: 1.02;
 }
 
+.blog-detail-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 22px;
+}
+
+.blog-detail-tags span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 5px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 680;
+  letter-spacing: 0.04em;
+}
+
 .blog-hero-image {
   position: relative;
   overflow: hidden;
@@ -609,6 +630,84 @@ p {
   max-height: 680px;
   object-fit: cover;
   filter: saturate(0.88) contrast(1.02);
+}
+
+.blog-content {
+  display: grid;
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.blog-story-section {
+  padding: 28px 30px 30px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background:
+    radial-gradient(circle at 92% 10%, rgba(17, 17, 19, 0.035), transparent 24%),
+    rgba(255, 255, 255, 0.88);
+  box-shadow: var(--shadow);
+}
+
+.blog-story-section h2 {
+  margin: 0 0 18px;
+  color: var(--text);
+  font-size: clamp(1.6rem, 3vw, 2.35rem);
+  line-height: 1.08;
+  letter-spacing: 0;
+}
+
+.blog-paragraph {
+  max-width: 760px;
+  margin: 18px 0;
+  color: #4c5057;
+  font-size: 1.05rem;
+  line-height: 1.95;
+}
+
+.blog-inline-image {
+  overflow: hidden;
+  margin: 20px 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 249, 251, 0.94)),
+    var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.blog-inline-image img {
+  display: block;
+  width: 100%;
+  max-height: 780px;
+  border-radius: 12px;
+  background: var(--surface-muted);
+  object-fit: cover;
+  filter: saturate(0.9) contrast(1.02);
+}
+
+.blog-inline-image figcaption {
+  margin-top: 10px;
+  color: var(--subtle);
+  font-size: 0.88rem;
+  font-weight: 620;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.blog-image-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin: 20px 0;
+}
+
+.blog-image-grid .blog-inline-image {
+  margin: 0;
+}
+
+.blog-image-grid .blog-inline-image img {
+  aspect-ratio: 3 / 4;
 }
 
 .blog-body {
@@ -1370,8 +1469,17 @@ p {
   }
 
   .blog-detail-header,
+  .blog-story-section,
   .blog-body {
     padding: 22px;
+  }
+
+  .blog-image-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .blog-inline-image {
+    padding: 10px;
   }
 
   .timeline-row {
