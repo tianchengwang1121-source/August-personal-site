@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
-import Script from 'next/script'
 
 const launchDate = new Date('2026-05-31T00:00:00+08:00')
 const localHosts = new Set(['localhost', '127.0.0.1', '::1'])
+const counterEndpoint = 'https://bsz.saop.cc/api'
 
 function formatOnlineTime(now) {
   const totalSeconds = Math.max(0, Math.floor((now - launchDate) / 1000))
@@ -16,12 +16,54 @@ function formatOnlineTime(now) {
   ).padStart(2, '0')}m ${String(seconds).padStart(2, '0')}s`
 }
 
+function formatStatNumber(value) {
+  return typeof value === 'number' ? value.toLocaleString('en-US') : '--'
+}
+
 export default function SiteStats({ staticStats }) {
   const [onlineTime, setOnlineTime] = useState('--')
-  const [shouldLoadCounter, setShouldLoadCounter] = useState(null)
+  const [counterStats, setCounterStats] = useState({
+    pageViews: '...',
+    visitors: '...',
+  })
 
   useEffect(() => {
-    setShouldLoadCounter(!localHosts.has(window.location.hostname))
+    const isLocalHost = localHosts.has(window.location.hostname)
+
+    if (isLocalHost) {
+      setCounterStats({
+        pageViews: '--',
+        visitors: '--',
+      })
+    } else {
+      fetch(counterEndpoint, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'x-bsz-referer': window.location.href,
+        },
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error('Counter request failed')
+          }
+
+          return response.json()
+        })
+        .then((result) => {
+          setCounterStats({
+            pageViews: formatStatNumber(result?.data?.site_pv),
+            visitors: formatStatNumber(result?.data?.site_uv),
+          })
+        })
+        .catch(() => {
+          setCounterStats({
+            pageViews: '--',
+            visitors: '--',
+          })
+        })
+    }
+
     setOnlineTime(formatOnlineTime(new Date()))
 
     const timer = window.setInterval(() => {
@@ -32,37 +74,25 @@ export default function SiteStats({ staticStats }) {
   }, [])
 
   return (
-    <>
-      {shouldLoadCounter && (
-        <Script
-          src="https://cdn.busuanzi.cc/busuanzi/3.6.9/busuanzi.min.js"
-          strategy="afterInteractive"
-        />
-      )}
-      <div className="footer-stats" aria-label="Site statistics">
-        {staticStats.map((item) => (
-          <div className="footer-stat" key={item.label}>
-            <strong>{item.value}</strong>
-            <span>{item.label}</span>
-          </div>
-        ))}
-        <div className="footer-stat footer-stat-live">
-          <strong id="busuanzi_value_site_uv" suppressHydrationWarning>
-            {shouldLoadCounter === false ? '--' : '...'}
-          </strong>
-          <span>Visitors</span>
+    <div className="footer-stats" aria-label="Site statistics">
+      {staticStats.map((item) => (
+        <div className="footer-stat" key={item.label}>
+          <strong>{item.value}</strong>
+          <span>{item.label}</span>
         </div>
-        <div className="footer-stat footer-stat-live">
-          <strong id="busuanzi_value_site_pv" suppressHydrationWarning>
-            {shouldLoadCounter === false ? '--' : '...'}
-          </strong>
-          <span>Page Views</span>
-        </div>
-        <div className="footer-stat footer-stat-online">
-          <strong suppressHydrationWarning>{onlineTime}</strong>
-          <span>Online</span>
-        </div>
+      ))}
+      <div className="footer-stat footer-stat-live">
+        <strong suppressHydrationWarning>{counterStats.visitors}</strong>
+        <span>Visitors</span>
       </div>
-    </>
+      <div className="footer-stat footer-stat-live">
+        <strong suppressHydrationWarning>{counterStats.pageViews}</strong>
+        <span>Page Views</span>
+      </div>
+      <div className="footer-stat footer-stat-online">
+        <strong suppressHydrationWarning>{onlineTime}</strong>
+        <span>Online</span>
+      </div>
+    </div>
   )
 }
