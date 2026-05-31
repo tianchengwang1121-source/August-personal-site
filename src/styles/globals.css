@@ -1111,7 +1111,7 @@ p {
   border: 1px solid var(--line);
   border-radius: 16px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(248, 249, 251, 0.9)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 249, 251, 0.94)),
     var(--surface);
   box-shadow: var(--shadow);
   transition:
@@ -1134,6 +1134,7 @@ p {
   aspect-ratio: var(--photo-aspect);
   border-radius: 10px;
   background: var(--surface-muted);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.88);
   filter: saturate(0.86) contrast(1.02);
   object-fit: cover;
   transform: translateZ(0);
