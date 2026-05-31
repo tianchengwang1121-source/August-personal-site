@@ -26,7 +26,7 @@ export default function Layout({ title, description, children }) {
         <title>{pageTitle}</title>
         <meta name="description" content={metaDescription} />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <link rel="icon" href="/favicon.svg?v=triangle" type="image/svg+xml" />
       </Head>
       <Navbar />
       <main className="site-main">{children}</main>
