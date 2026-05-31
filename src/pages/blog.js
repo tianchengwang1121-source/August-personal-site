@@ -9,7 +9,7 @@ export default function Blog() {
       <section className="page-intro">
         <div className="page-intro-main">
           <p className="eyebrow">Blog</p>
-          <h1>Writing and notes</h1>
+          <h1>Notes</h1>
           <div className="page-intro-meta" aria-label="Blog categories">
             <span>Travel</span>
             <span>Photos</span>
