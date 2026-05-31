@@ -47,13 +47,13 @@ export default function SiteStats({ staticStats }) {
           </div>
         ))}
         <div className="footer-stat footer-stat-live">
-          <strong id="busuanzi_site_uv" suppressHydrationWarning>
+          <strong id="busuanzi_value_site_uv" suppressHydrationWarning>
             {shouldLoadCounter === false ? '--' : '...'}
           </strong>
           <span>Visitors</span>
         </div>
         <div className="footer-stat footer-stat-live">
-          <strong id="busuanzi_site_pv" suppressHydrationWarning>
+          <strong id="busuanzi_value_site_pv" suppressHydrationWarning>
             {shouldLoadCounter === false ? '--' : '...'}
           </strong>
           <span>Page Views</span>
