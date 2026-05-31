@@ -281,7 +281,7 @@ p {
     var(--surface);
   background-size: auto, 36px 36px, 36px 36px, auto, auto;
   box-shadow: 0 24px 70px rgba(17, 17, 19, 0.1);
-  animation: art-breathe 8s ease-in-out infinite;
+  animation: art-breathe 6.5s ease-in-out infinite;
 }
 
 .art-orbit,
@@ -301,7 +301,7 @@ p {
   left: 36px;
   width: 250px;
   height: 250px;
-  animation: art-float 10s ease-in-out infinite;
+  animation: art-float 6.5s ease-in-out infinite;
 }
 
 .art-orbit-small {
@@ -310,7 +310,7 @@ p {
   width: 112px;
   height: 112px;
   background: rgba(255, 255, 255, 0.42);
-  animation: art-float 12s ease-in-out infinite reverse;
+  animation: art-float 7.5s ease-in-out infinite reverse;
 }
 
 .art-orbit-large::before,
