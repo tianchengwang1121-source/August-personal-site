@@ -3,6 +3,10 @@ import Link from 'next/link'
 import Layout from '@/components/Layout'
 import { blogPosts } from '@/data/site'
 
+function getPostYear(date) {
+  return date.split('.')[0]
+}
+
 export default function Timeline() {
   return (
     <Layout title="Timeline">
@@ -22,32 +26,45 @@ export default function Timeline() {
         </div>
       </section>
       <section className="timeline-page-list" aria-label="Experience timeline">
-        {blogPosts.map((item, index) => (
-          <article className="timeline-entry" key={item.slug}>
-            <div className="timeline-marker" aria-hidden="true">
-              <span className="timeline-entry-date">{item.date}</span>
-              <span className="timeline-entry-dot" />
-            </div>
-            <Link className="timeline-entry-card" href={`/blog/${item.slug}`}>
-              <div className="timeline-entry-image">
-                <Image
-                  src={item.image}
-                  alt={item.title}
-                  width={520}
-                  height={360}
-                />
+        {blogPosts.map((item, index) => {
+          const year = getPostYear(item.date)
+          const previousYear =
+            index > 0 ? getPostYear(blogPosts[index - 1].date) : null
+          const showYearMarker = year !== previousYear
+
+          return (
+            <article className="timeline-entry" key={item.slug}>
+              {showYearMarker && (
+                <div className="timeline-year-marker" aria-label={`${year} records`}>
+                  <span>{year}</span>
+                  <strong>New year</strong>
+                </div>
+              )}
+              <div className="timeline-marker" aria-hidden="true">
+                <span className="timeline-entry-date">{item.date}</span>
+                <span className="timeline-entry-dot" />
               </div>
-              <div className="timeline-entry-content">
-                <span className="timeline-entry-index">
-                  {String(index + 1).padStart(2, '0')}
-                </span>
-                <p className="eyebrow">{item.category}</p>
-                <h2>{item.location}</h2>
-                <p>{item.title}</p>
-              </div>
-            </Link>
-          </article>
-        ))}
+              <Link className="timeline-entry-card" href={`/blog/${item.slug}`}>
+                <div className="timeline-entry-image">
+                  <Image
+                    src={item.image}
+                    alt={item.title}
+                    width={520}
+                    height={360}
+                  />
+                </div>
+                <div className="timeline-entry-content">
+                  <span className="timeline-entry-index">
+                    {String(index + 1).padStart(2, '0')}
+                  </span>
+                  <p className="eyebrow">{item.category}</p>
+                  <h2>{item.location}</h2>
+                  <p>{item.title}</p>
+                </div>
+              </Link>
+            </article>
+          )
+        })}
       </section>
     </Layout>
   )

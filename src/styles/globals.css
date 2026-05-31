@@ -685,8 +685,62 @@ p {
   padding: 0 0 18px;
 }
 
+.timeline-entry:has(.timeline-year-marker) {
+  padding-top: 82px;
+}
+
 .timeline-entry:last-child {
   padding-bottom: 0;
+}
+
+.timeline-year-marker {
+  position: absolute;
+  top: 0;
+  left: -164px;
+  right: 0;
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.timeline-year-marker::before {
+  content: '';
+  width: 130px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(216, 219, 225, 0.96));
+}
+
+.timeline-year-marker::after {
+  content: '';
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(216, 219, 225, 0.9), transparent);
+}
+
+.timeline-year-marker span {
+  min-width: 78px;
+  padding: 10px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(248, 249, 251, 0.82)),
+    var(--surface);
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 720;
+  line-height: 1;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+
+.timeline-year-marker strong {
+  color: var(--subtle);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .timeline-marker {
@@ -698,6 +752,10 @@ p {
   align-items: center;
   justify-content: flex-end;
   gap: 14px;
+}
+
+.timeline-entry:has(.timeline-year-marker) .timeline-marker {
+  top: 108px;
 }
 
 .timeline-entry-date {
@@ -1338,6 +1396,10 @@ p {
     top: 18px;
     left: 0;
     width: auto;
+  }
+
+  .timeline-entry:has(.timeline-year-marker) .timeline-marker {
+    top: 100px;
   }
 
   .timeline-entry-date {
