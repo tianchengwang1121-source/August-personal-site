@@ -661,86 +661,101 @@ p {
   position: relative;
   display: grid;
   gap: 0;
-  padding-left: 164px;
+  padding-left: 148px;
 }
 
 .timeline-page-list::before {
   content: '';
   position: absolute;
-  top: 18px;
-  bottom: 18px;
-  left: 116px;
+  top: 4px;
+  bottom: 12px;
+  left: 108px;
   width: 1px;
   background: linear-gradient(
     180deg,
     transparent,
-    rgba(216, 219, 225, 0.96) 8%,
-    rgba(216, 219, 225, 0.96) 92%,
+    rgba(216, 219, 225, 0.96) 6%,
+    rgba(216, 219, 225, 0.96) 94%,
     transparent
   );
 }
 
 .timeline-entry {
   position: relative;
-  padding: 0 0 18px;
+  padding: 0 0 22px;
 }
 
 .timeline-entry:has(.timeline-year-marker) {
-  padding-top: 62px;
+  padding-top: 68px;
 }
 
 .timeline-entry:last-child {
   padding-bottom: 0;
 }
 
+.timeline-entry::before {
+  content: '';
+  position: absolute;
+  top: 34px;
+  left: -40px;
+  width: 40px;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(216, 219, 225, 0.92), transparent);
+}
+
+.timeline-entry:has(.timeline-year-marker)::before {
+  top: 96px;
+}
+
 .timeline-year-marker {
   position: absolute;
-  top: 2px;
-  left: -164px;
-  width: 130px;
+  top: 4px;
+  left: -148px;
+  width: 116px;
   display: flex;
   align-items: center;
   justify-content: flex-end;
 }
 
 .timeline-year-marker span {
-  min-width: 74px;
-  padding: 9px 12px;
+  min-width: 70px;
+  padding: 9px 11px;
   border: 1px solid var(--line-strong);
   border-radius: 999px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(248, 249, 251, 0.82)),
-    var(--surface);
+    radial-gradient(circle at 50% 0, rgba(17, 17, 19, 0.06), transparent 58%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 249, 251, 0.88)),
+    rgba(255, 255, 255, 0.92);
   color: var(--text);
   font-size: 1rem;
   font-weight: 720;
   line-height: 1;
   text-align: center;
-  box-shadow: var(--shadow);
+  box-shadow: 0 8px 22px rgba(17, 17, 19, 0.07);
 }
 
 .timeline-marker {
   position: absolute;
   top: 26px;
-  left: -164px;
-  width: 130px;
+  left: -148px;
+  width: 116px;
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 14px;
+  gap: 12px;
 }
 
 .timeline-entry:has(.timeline-year-marker) .timeline-marker {
-  top: 88px;
+  top: 90px;
 }
 
 .timeline-entry-date {
-  padding: 7px 10px;
+  padding: 6px 9px;
   border: 1px solid var(--line);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.78);
+  background: rgba(255, 255, 255, 0.7);
   color: var(--subtle);
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   font-weight: 700;
   line-height: 1;
   letter-spacing: 0.02em;
@@ -749,8 +764,8 @@ p {
 
 .timeline-entry-dot {
   position: relative;
-  width: 13px;
-  height: 13px;
+  width: 12px;
+  height: 12px;
   flex: 0 0 auto;
   border: 3px solid var(--background);
   border-radius: 50%;
@@ -761,19 +776,19 @@ p {
 }
 
 .timeline-entry-card {
-  min-height: 160px;
+  min-height: 156px;
   display: grid;
-  grid-template-columns: minmax(178px, 0.3fr) minmax(0, 1fr);
-  gap: 22px;
+  grid-template-columns: minmax(184px, 0.28fr) minmax(0, 1fr);
+  gap: 24px;
   align-items: stretch;
   overflow: hidden;
-  padding: 12px;
+  padding: 14px;
   border: 1px solid var(--line);
-  border-radius: var(--radius-md);
+  border-radius: 16px;
   background:
-    radial-gradient(circle at 92% 18%, rgba(17, 17, 19, 0.035), transparent 24%),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.96), rgba(248, 249, 251, 0.74)),
-    rgba(255, 255, 255, 0.88);
+    radial-gradient(circle at 94% 18%, rgba(17, 17, 19, 0.03), transparent 24%),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.96), rgba(248, 249, 251, 0.82)),
+    rgba(255, 255, 255, 0.9);
   box-shadow: var(--shadow);
   transition:
     border-color 160ms ease,
@@ -790,7 +805,7 @@ p {
 .timeline-entry-image {
   overflow: hidden;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 12px;
   background: var(--surface-muted);
 }
 
@@ -810,7 +825,7 @@ p {
 .timeline-entry-content {
   position: relative;
   min-width: 0;
-  padding: 18px 50px 18px 0;
+  padding: 18px 56px 18px 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -1366,6 +1381,21 @@ p {
 
   .timeline-entry {
     padding-left: 28px;
+  }
+
+  .timeline-entry::before {
+    top: 26px;
+    left: 8px;
+    width: 20px;
+  }
+
+  .timeline-entry:has(.timeline-year-marker)::before {
+    top: 86px;
+  }
+
+  .timeline-year-marker {
+    left: 0;
+    width: auto;
   }
 
   .timeline-marker {
