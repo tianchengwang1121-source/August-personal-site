@@ -62,19 +62,19 @@ export const blogPosts = [
         title: 'Departure',
         blocks: [
           {
-            type: 'image',
-            src: '/images/blog/singapore-airshow/1.jpg',
-            alt: '临走之前带个墨镜装酷哈哈哈',
-            caption: '临走之前带个墨镜装酷哈哈哈',
-            width: 1200,
-            height: 1600,
-          },
-          {
-            type: 'paragraph',
+            type: 'media',
             text: '期待了近一个月，新加坡航展终于要来啦。虽然是2月6号的飞机，但是依旧保留传统，提前一晚到达HKG进行航空摄影活动。很巧的是，好基友Peter也是明天的飞机，他前往台北旅行。',
+            image: {
+              src: '/images/blog/singapore-airshow/1.jpg',
+              alt: '临走之前带个墨镜装酷哈哈哈',
+              caption: '临走之前带个墨镜装酷哈哈哈',
+              width: 1200,
+              height: 1600,
+            },
           },
           {
             type: 'gallery',
+            variant: 'compact',
             images: [
               {
                 src: '/images/blog/singapore-airshow/2.jpg',
@@ -98,6 +98,7 @@ export const blogPosts = [
           },
           {
             type: 'image',
+            variant: 'medium',
             src: '/images/blog/singapore-airshow/4.jpg',
             alt: '俯瞰新加坡城区',
             caption: '俯瞰新加坡城区',
@@ -111,16 +112,15 @@ export const blogPosts = [
         title: '新加坡初印象',
         blocks: [
           {
-            type: 'paragraph',
+            type: 'media',
             text: '落地新加坡，先来到Chinatown体验一下特色的南洋美食，',
-          },
-          {
-            type: 'image',
-            src: '/images/blog/singapore-airshow/5.jpg',
-            alt: '福建炒面（7新币，中规中矩）',
-            caption: '福建炒面（7新币，中规中矩）',
-            width: 1200,
-            height: 1600,
+            image: {
+              src: '/images/blog/singapore-airshow/5.jpg',
+              alt: '福建炒面（7新币，中规中矩）',
+              caption: '福建炒面（7新币，中规中矩）',
+              width: 1200,
+              height: 1600,
+            },
           },
         ],
       },

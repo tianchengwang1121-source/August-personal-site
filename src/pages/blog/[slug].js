@@ -4,8 +4,12 @@ import Layout from '@/components/Layout'
 import { blogPosts } from '@/data/site'
 
 function BlogImage({ image, className = '' }) {
+  const variantClass = image.variant
+    ? ` blog-inline-image--${image.variant}`
+    : ''
+
   return (
-    <figure className={`blog-inline-image ${className}`}>
+    <figure className={`blog-inline-image${variantClass} ${className}`}>
       <Image
         src={image.src}
         alt={image.alt || image.caption}
@@ -23,9 +27,25 @@ function BlogBlock({ block }) {
     return <p className="blog-paragraph">{block.text}</p>
   }
 
+  if (block.type === 'media') {
+    return (
+      <div className="blog-media-row">
+        <p className="blog-paragraph">{block.text}</p>
+        <BlogImage
+          className="blog-inline-image--aside"
+          image={{ ...block.image, variant: 'aside' }}
+        />
+      </div>
+    )
+  }
+
   if (block.type === 'gallery') {
     return (
-      <div className="blog-image-grid">
+      <div
+        className={`blog-image-grid${
+          block.variant ? ` blog-image-grid--${block.variant}` : ''
+        }`}
+      >
         {block.images.map((image) => (
           <BlogImage image={image} key={image.src} />
         ))}
