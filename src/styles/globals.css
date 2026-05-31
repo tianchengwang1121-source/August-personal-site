@@ -1118,6 +1118,7 @@ p {
     border-color 160ms ease,
     box-shadow 160ms ease,
     transform 160ms ease;
+  transform: translateZ(0);
 }
 
 .photo-frame:hover {
@@ -1130,8 +1131,13 @@ p {
   display: block;
   width: 100%;
   height: auto;
+  aspect-ratio: var(--photo-aspect);
   border-radius: 10px;
+  background: var(--surface-muted);
   filter: saturate(0.86) contrast(1.02);
+  object-fit: cover;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .site-footer {

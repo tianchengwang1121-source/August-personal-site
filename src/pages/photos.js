@@ -22,7 +22,7 @@ export default function Photos() {
       </section>
 
       <section className="photo-collections" aria-label="Photo collections">
-        {photoCollections.map((collection) => (
+        {photoCollections.map((collection, collectionIndex) => (
           <section className="photo-section panel" key={collection.id}>
             <div className="photo-section-heading">
               <div>
@@ -33,13 +33,19 @@ export default function Photos() {
             </div>
             <div className="photo-masonry">
               {collection.images.map((image, index) => (
-                <figure className="photo-frame" key={image.src}>
+                <figure
+                  className="photo-frame"
+                  key={image.src}
+                  style={{ '--photo-aspect': `${image.width} / ${image.height}` }}
+                >
                   <Image
                     src={image.src}
                     alt={image.alt}
                     width={image.width}
                     height={image.height}
-                    priority={index < 2}
+                    priority={collectionIndex === 0}
+                    loading={collectionIndex === 0 ? 'eager' : 'lazy'}
+                    sizes="(max-width: 760px) calc(100vw - 88px), (max-width: 1120px) calc((100vw - 92px) / 2), 340px"
                   />
                 </figure>
               ))}
