@@ -37,7 +37,6 @@ export default function Timeline() {
               {showYearMarker && (
                 <div className="timeline-year-marker" aria-label={`${year} records`}>
                   <span>{year}</span>
-                  <strong>New year</strong>
                 </div>
               )}
               <div className="timeline-marker" aria-hidden="true">
