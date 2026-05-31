@@ -17,11 +17,12 @@ function formatOnlineTime(now) {
 }
 
 export default function SiteStats({ staticStats }) {
-  const [onlineTime, setOnlineTime] = useState(() => formatOnlineTime(new Date()))
+  const [onlineTime, setOnlineTime] = useState('--')
   const [shouldLoadCounter, setShouldLoadCounter] = useState(null)
 
   useEffect(() => {
     setShouldLoadCounter(!localHosts.has(window.location.hostname))
+    setOnlineTime(formatOnlineTime(new Date()))
 
     const timer = window.setInterval(() => {
       setOnlineTime(formatOnlineTime(new Date()))
@@ -58,7 +59,7 @@ export default function SiteStats({ staticStats }) {
           <span>Page Views</span>
         </div>
         <div className="footer-stat footer-stat-online">
-          <strong>{onlineTime}</strong>
+          <strong suppressHydrationWarning>{onlineTime}</strong>
           <span>Online</span>
         </div>
       </div>

@@ -658,44 +658,93 @@ p {
 }
 
 .timeline-page-list {
-  gap: 16px;
+  position: relative;
+  display: grid;
+  gap: 0;
+  padding-left: 164px;
+}
+
+.timeline-page-list::before {
+  content: '';
+  position: absolute;
+  top: 18px;
+  bottom: 18px;
+  left: 116px;
+  width: 1px;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgba(216, 219, 225, 0.96) 8%,
+    rgba(216, 219, 225, 0.96) 92%,
+    transparent
+  );
+}
+
+.timeline-entry {
+  position: relative;
+  padding: 0 0 18px;
+}
+
+.timeline-entry:last-child {
+  padding-bottom: 0;
+}
+
+.timeline-marker {
+  position: absolute;
+  top: 26px;
+  left: -164px;
+  width: 130px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+}
+
+.timeline-entry-date {
+  padding: 7px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--subtle);
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  box-shadow: var(--shadow);
+}
+
+.timeline-entry-dot {
+  position: relative;
+  width: 13px;
+  height: 13px;
+  flex: 0 0 auto;
+  border: 3px solid var(--background);
+  border-radius: 50%;
+  background: var(--text);
+  box-shadow:
+    0 0 0 1px var(--line-strong),
+    0 8px 20px rgba(17, 17, 19, 0.08);
 }
 
 .timeline-entry-card {
-  position: relative;
-  min-height: 176px;
+  min-height: 160px;
   display: grid;
-  grid-template-columns: minmax(190px, 0.34fr) minmax(0, 1fr);
-  gap: 24px;
-  align-items: center;
+  grid-template-columns: minmax(178px, 0.3fr) minmax(0, 1fr);
+  gap: 22px;
+  align-items: stretch;
   overflow: hidden;
-  padding: 16px 68px 16px 16px;
+  padding: 12px;
   border: 1px solid var(--line);
-  border-radius: 18px;
+  border-radius: var(--radius-md);
   background:
-    radial-gradient(circle at 94% 20%, rgba(17, 17, 19, 0.035), transparent 24%),
-    linear-gradient(90deg, rgba(17, 17, 19, 0.024), transparent 44%),
-    rgba(255, 255, 255, 0.9);
+    radial-gradient(circle at 92% 18%, rgba(17, 17, 19, 0.035), transparent 24%),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.96), rgba(248, 249, 251, 0.74)),
+    rgba(255, 255, 255, 0.88);
   box-shadow: var(--shadow);
   transition:
     border-color 160ms ease,
     box-shadow 160ms ease,
     transform 160ms ease;
-}
-
-.timeline-entry-card::before {
-  content: '';
-  position: absolute;
-  top: 18px;
-  bottom: 18px;
-  right: 50px;
-  width: 1px;
-  background: linear-gradient(
-    180deg,
-    transparent,
-    rgba(216, 219, 225, 0.9),
-    transparent
-  );
 }
 
 .timeline-entry-card:hover {
@@ -706,9 +755,8 @@ p {
 
 .timeline-entry-image {
   overflow: hidden;
-  aspect-ratio: 16 / 10;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 10px;
   background: var(--surface-muted);
 }
 
@@ -726,15 +774,20 @@ p {
 }
 
 .timeline-entry-content {
+  position: relative;
   min-width: 0;
+  padding: 18px 50px 18px 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .timeline-entry-content h2 {
-  margin-top: 14px;
-  font-size: clamp(1.48rem, 2.6vw, 2.12rem);
+  margin-top: 10px;
+  font-size: clamp(1.55rem, 3vw, 2.25rem);
 }
 
-.timeline-entry-content p:not(.meta) {
+.timeline-entry-content > p:not(.eyebrow) {
   margin-top: 10px;
   color: var(--muted);
   font-size: 0.98rem;
@@ -743,10 +796,10 @@ p {
 
 .timeline-entry-index {
   position: absolute;
-  top: 18px;
-  right: 16px;
-  min-width: 32px;
-  height: 32px;
+  top: 16px;
+  right: 0;
+  min-width: 34px;
+  height: 34px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1269,6 +1322,33 @@ p {
     grid-template-columns: 1fr;
   }
 
+  .timeline-page-list {
+    padding-left: 0;
+  }
+
+  .timeline-page-list::before {
+    left: 7px;
+  }
+
+  .timeline-entry {
+    padding-left: 28px;
+  }
+
+  .timeline-marker {
+    top: 18px;
+    left: 0;
+    width: auto;
+  }
+
+  .timeline-entry-date {
+    display: none;
+  }
+
+  .timeline-entry-dot {
+    width: 15px;
+    height: 15px;
+  }
+
   .timeline-entry-card {
     grid-template-columns: 1fr;
     gap: 16px;
@@ -1281,8 +1361,12 @@ p {
 
   .timeline-entry-index {
     position: absolute;
-    top: 20px;
-    right: 20px;
+    top: 14px;
+    right: 14px;
+  }
+
+  .timeline-entry-content {
+    padding: 4px 48px 6px 0;
   }
 
   .site-footer {

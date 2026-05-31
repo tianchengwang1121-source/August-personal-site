@@ -21,30 +21,32 @@ export default function Timeline() {
           <strong>Logs</strong>
         </div>
       </section>
-      <section className="timeline-list timeline-page-list">
+      <section className="timeline-page-list" aria-label="Experience timeline">
         {blogPosts.map((item, index) => (
-          <Link
-            className="timeline-entry-card"
-            href={`/blog/${item.slug}`}
-            key={item.slug}
-          >
-            <div className="timeline-entry-image">
-              <Image
-                src={item.image}
-                alt={item.title}
-                width={520}
-                height={360}
-              />
+          <article className="timeline-entry" key={item.slug}>
+            <div className="timeline-marker" aria-hidden="true">
+              <span className="timeline-entry-date">{item.date}</span>
+              <span className="timeline-entry-dot" />
             </div>
-            <div className="timeline-entry-content">
-              <p className="meta">{item.date}</p>
-              <h2>{item.location}</h2>
-              <p>{item.title}</p>
-            </div>
-            <span className="timeline-entry-index" aria-hidden="true">
-              {String(index + 1).padStart(2, '0')}
-            </span>
-          </Link>
+            <Link className="timeline-entry-card" href={`/blog/${item.slug}`}>
+              <div className="timeline-entry-image">
+                <Image
+                  src={item.image}
+                  alt={item.title}
+                  width={520}
+                  height={360}
+                />
+              </div>
+              <div className="timeline-entry-content">
+                <span className="timeline-entry-index">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+                <p className="eyebrow">{item.category}</p>
+                <h2>{item.location}</h2>
+                <p>{item.title}</p>
+              </div>
+            </Link>
+          </article>
         ))}
       </section>
     </Layout>
