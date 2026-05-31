@@ -1037,9 +1037,9 @@ p {
   margin: 0 auto;
   padding: 18px 0 36px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(190px, 0.72fr) minmax(0, 1fr);
   gap: 18px;
-  align-items: center;
+  align-items: start;
   color: var(--subtle);
   border-top: 1px solid var(--line);
   font-size: 0.82rem;
@@ -1052,12 +1052,12 @@ p {
 
 .footer-stats {
   display: grid;
-  grid-template-columns: repeat(4, auto);
+  grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
   gap: 8px;
 }
 
 .footer-stat {
-  min-width: 82px;
+  min-width: 0;
   padding: 10px 12px;
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
@@ -1076,6 +1076,8 @@ p {
   font-size: 1rem;
   font-weight: 680;
   line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .footer-stat span {
@@ -1085,6 +1087,14 @@ p {
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+}
+
+.footer-stat-live strong {
+  min-height: 1.1em;
+}
+
+.footer-stat-wide {
+  grid-column: span 2;
 }
 
 @keyframes page-enter {

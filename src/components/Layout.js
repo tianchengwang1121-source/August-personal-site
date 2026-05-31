@@ -1,5 +1,6 @@
 import Head from 'next/head'
 import Navbar from './Navbar'
+import SiteStats from './SiteStats'
 import { blogPosts, siteProfile } from '@/data/site'
 import { photoCollections } from '@/data/photos'
 
@@ -34,14 +35,7 @@ export default function Layout({ title, description, children }) {
           <span>© 2026 {siteProfile.name}</span>
           <span>Personal homepage and archive.</span>
         </div>
-        <div className="footer-stats" aria-label="Site statistics">
-          {footerStats.map((item) => (
-            <div className="footer-stat" key={item.label}>
-              <strong>{item.value}</strong>
-              <span>{item.label}</span>
-            </div>
-          ))}
-        </div>
+        <SiteStats staticStats={footerStats} />
       </footer>
     </>
   )
