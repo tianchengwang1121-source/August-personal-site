@@ -57,7 +57,7 @@ export default function Timeline() {
                     {String(index + 1).padStart(2, '0')}
                   </span>
                   <p className="eyebrow">{item.category}</p>
-                  <h2>{item.location}</h2>
+                  <h2>{item.displayLocation || item.location}</h2>
                   <p>{item.title}</p>
                 </div>
               </Link>
