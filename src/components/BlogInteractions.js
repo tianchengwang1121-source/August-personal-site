@@ -32,6 +32,25 @@ function getStoredLike(slug) {
   return window.localStorage.getItem(`blog-liked-${slug}`) === 'true'
 }
 
+function getCommentOwnerToken(slug, commentId) {
+  if (typeof window === 'undefined') {
+    return ''
+  }
+
+  return window.localStorage.getItem(`blog-comment-owner-${slug}-${commentId}`) || ''
+}
+
+function storeCommentOwnerToken(slug, commentId, ownerToken) {
+  if (!commentId || !ownerToken) {
+    return
+  }
+
+  window.localStorage.setItem(
+    `blog-comment-owner-${slug}-${commentId}`,
+    ownerToken
+  )
+}
+
 export default function BlogInteractions({ slug }) {
   const endpoint = useMemo(() => `/api/blog-interactions/${slug}`, [slug])
   const [comments, setComments] = useState([])
@@ -41,6 +60,7 @@ export default function BlogInteractions({ slug }) {
   const [isNameDialogOpen, setIsNameDialogOpen] = useState(false)
   const [likeCount, setLikeCount] = useState(0)
   const [name, setName] = useState('')
+  const [ownedCommentIds, setOwnedCommentIds] = useState([])
   const [pendingComment, setPendingComment] = useState('')
   const [statusMessage, setStatusMessage] = useState('')
 
@@ -65,6 +85,11 @@ export default function BlogInteractions({ slug }) {
 
         setLikeCount(data.likes || 0)
         setComments(data.comments || [])
+        setOwnedCommentIds(
+          (data.comments || [])
+            .filter((comment) => getCommentOwnerToken(slug, comment.id))
+            .map((comment) => comment.id)
+        )
       })
       .catch(() => {
         if (isMounted) {
@@ -137,12 +162,54 @@ export default function BlogInteractions({ slug }) {
       })
       .then((data) => {
         setComments(data.comments || [])
+        storeCommentOwnerToken(slug, data.publishedCommentId, data.ownerToken)
+        setOwnedCommentIds((ids) => [
+          data.publishedCommentId,
+          ...ids.filter((id) => id !== data.publishedCommentId),
+        ])
         setDraft('')
         setPendingComment('')
         setStatusMessage('')
       })
       .catch(() => {
-        setStatusMessage('Comment could not be published. Please try again.')
+      setStatusMessage('Comment could not be published. Please try again.')
+      })
+  }
+
+  function handleDeleteComment(commentId) {
+    const ownerToken = getCommentOwnerToken(slug, commentId)
+
+    if (!ownerToken) {
+      setStatusMessage(
+        'This comment can only be deleted from the browser that published it.'
+      )
+      return
+    }
+
+    fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'delete-comment',
+        commentId,
+        ownerToken,
+      }),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Failed to delete comment')
+        }
+
+        return response.json()
+      })
+      .then((data) => {
+        window.localStorage.removeItem(`blog-comment-owner-${slug}-${commentId}`)
+        setComments(data.comments || [])
+        setOwnedCommentIds((ids) => ids.filter((id) => id !== commentId))
+        setStatusMessage('')
+      })
+      .catch(() => {
+        setStatusMessage('Comment could not be deleted. Please try again.')
       })
   }
 
@@ -222,8 +289,19 @@ export default function BlogInteractions({ slug }) {
         {comments.map((comment) => (
           <article className="blog-comment" key={comment.id}>
             <div className="blog-comment-meta">
-              <strong>{comment.name}</strong>
-              <span>{formatCommentDate(comment.createdAt)}</span>
+              <div>
+                <strong>{comment.name}</strong>
+                <span>{formatCommentDate(comment.createdAt)}</span>
+              </div>
+              {ownedCommentIds.includes(comment.id) && (
+                <button
+                  className="blog-comment-delete"
+                  onClick={() => handleDeleteComment(comment.id)}
+                  type="button"
+                >
+                  Delete
+                </button>
+              )}
             </div>
             <p>{comment.text}</p>
           </article>

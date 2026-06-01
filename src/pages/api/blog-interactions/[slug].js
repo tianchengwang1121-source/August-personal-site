@@ -37,6 +37,10 @@ function cleanText(value, limit) {
     .slice(0, limit)
 }
 
+function getAdminPassword() {
+  return process.env.BLOG_ADMIN_PASSWORD || ''
+}
+
 function getKeys(slug) {
   return {
     comments: `blog:${slug}:comments`,
@@ -74,8 +78,21 @@ function sortComments(comments) {
   )
 }
 
-async function getState(slug) {
+function stripPrivateCommentFields(comment) {
+  const { ownerToken, ...publicComment } = comment
+  return publicComment
+}
+
+function getPublicState(state) {
+  return {
+    comments: state.comments.map(stripPrivateCommentFields),
+    likes: state.likes,
+  }
+}
+
+async function getState(slug, options = {}) {
   const keys = getKeys(slug)
+  const includePrivate = Boolean(options.includePrivate)
 
   if (getRedisConfig()) {
     const [likes, rawComments] = await Promise.all([
@@ -83,7 +100,7 @@ async function getState(slug) {
       redisCommand(['LRANGE', keys.comments, 0, MAX_STORED_COMMENTS - 1]),
     ])
 
-    return {
+    const state = {
       comments: (rawComments || [])
         .map((item) => {
           try {
@@ -95,12 +112,16 @@ async function getState(slug) {
         .filter(Boolean),
       likes: Number(likes || 0),
     }
+
+    return includePrivate ? state : getPublicState(state)
   }
 
-  return {
+  const state = {
     comments: memoryStore.comments.get(slug) || [],
     likes: memoryStore.likes.get(slug) || 0,
   }
+
+  return includePrivate ? state : getPublicState(state)
 }
 
 async function setLike(slug, delta) {
@@ -128,7 +149,7 @@ async function addComment(slug, comment) {
   if (getRedisConfig()) {
     await redisCommand(['LPUSH', keys.comments, JSON.stringify(comment)])
     await redisCommand(['LTRIM', keys.comments, 0, MAX_STORED_COMMENTS - 1])
-    return getState(slug)
+    return getState(slug, { includePrivate: true })
   }
 
   const comments = sortComments([
@@ -141,6 +162,47 @@ async function addComment(slug, comment) {
   return {
     comments,
     likes: memoryStore.likes.get(slug) || 0,
+  }
+}
+
+async function deleteComment(slug, commentId, credentials) {
+  const keys = getKeys(slug)
+  const adminPassword = getAdminPassword()
+  const state = await getState(slug, { includePrivate: true })
+  const comment = state.comments.find((item) => item.id === commentId)
+
+  if (!comment) {
+    return { deleted: false, state }
+  }
+
+  const isAdmin =
+    Boolean(adminPassword) && credentials.adminPassword === adminPassword
+  const isOwner =
+    Boolean(comment.ownerToken) && credentials.ownerToken === comment.ownerToken
+
+  if (!isAdmin && !isOwner) {
+    const error = new Error('Not authorized')
+    error.statusCode = 403
+    throw error
+  }
+
+  if (getRedisConfig()) {
+    await redisCommand(['LREM', keys.comments, 1, JSON.stringify(comment)])
+    return {
+      deleted: true,
+      state: await getState(slug, { includePrivate: true }),
+    }
+  }
+
+  const comments = state.comments.filter((item) => item.id !== commentId)
+  memoryStore.comments.set(slug, comments)
+
+  return {
+    deleted: true,
+    state: {
+      comments,
+      likes: state.likes,
+    },
   }
 }
 
@@ -177,6 +239,29 @@ export default async function handler(request, response) {
       return
     }
 
+    if (action === 'delete-comment') {
+      const commentId = cleanText(request.body.commentId, 80)
+      const ownerToken = cleanText(request.body.ownerToken, 120)
+      const adminPassword = String(request.body.adminPassword || '')
+
+      if (!commentId) {
+        response.status(400).json({ message: 'Comment id is required' })
+        return
+      }
+
+      const result = await deleteComment(slug, commentId, {
+        adminPassword,
+        ownerToken,
+      })
+      const publicState = getPublicState(result.state)
+
+      response.status(200).json({
+        ...publicState,
+        deleted: result.deleted,
+      })
+      return
+    }
+
     if (action === 'comment') {
       const name = cleanText(request.body.name, MAX_NAME_LENGTH)
       const text = cleanText(request.body.text, MAX_COMMENT_LENGTH)
@@ -190,15 +275,27 @@ export default async function handler(request, response) {
         createdAt: new Date().toISOString(),
         id: crypto.randomUUID(),
         name,
+        ownerToken: crypto.randomUUID(),
         text,
       }
 
-      response.status(201).json(await addComment(slug, comment))
+      const state = await addComment(slug, comment)
+
+      response.status(201).json({
+        ...getPublicState(state),
+        ownerToken: comment.ownerToken,
+        publishedCommentId: comment.id,
+      })
       return
     }
 
     response.status(400).json({ message: 'Unknown action' })
-  } catch {
-    response.status(500).json({ message: 'Interaction service unavailable' })
+  } catch (error) {
+    response.status(error.statusCode || 500).json({
+      message:
+        error.statusCode === 403
+          ? 'Not authorized'
+          : 'Interaction service unavailable',
+    })
   }
 }
