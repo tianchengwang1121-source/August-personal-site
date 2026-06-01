@@ -1,4 +1,5 @@
 import Head from 'next/head'
+import Link from 'next/link'
 import Navbar from './Navbar'
 import SiteStats from './SiteStats'
 import { blogPosts, siteProfile } from '@/data/site'
@@ -36,7 +37,15 @@ export default function Layout({ title, description, children }) {
       <main className="site-main">{children}</main>
       <footer className="site-footer">
         <div className="footer-signature">
-          <span>© 2026 {siteProfile.name}</span>
+          <span>
+            © 2026 {siteProfile.name}
+            <Link
+              className="footer-admin-entry"
+              href="/admin/comments"
+              aria-label="Comment admin"
+              title="Comment admin"
+            />
+          </span>
           <span>Personal homepage and archive.</span>
         </div>
         <SiteStats staticStats={footerStats} />

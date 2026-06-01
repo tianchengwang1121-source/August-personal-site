@@ -1787,6 +1787,35 @@ p {
   flex-wrap: wrap;
 }
 
+.footer-signature > span:first-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.footer-admin-entry {
+  width: 7px;
+  height: 7px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: rgba(167, 171, 178, 0.22);
+  opacity: 0.22;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    opacity 160ms ease,
+    transform 160ms ease;
+}
+
+.footer-admin-entry:hover,
+.footer-admin-entry:focus-visible {
+  border-color: var(--line-strong);
+  background: rgba(17, 17, 19, 0.62);
+  opacity: 1;
+  outline: none;
+  transform: scale(1.25);
+}
+
 .footer-stats {
   display: grid;
   grid-template-columns: repeat(6, minmax(92px, 1fr)) minmax(178px, 1.35fr);
