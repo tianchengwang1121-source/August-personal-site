@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
+import BlogInteractions from '@/components/BlogInteractions'
 import Layout from '@/components/Layout'
 import { blogPosts } from '@/data/site'
 
@@ -31,10 +32,7 @@ function BlogBlock({ block }) {
     return (
       <div className="blog-media-row">
         <p className="blog-paragraph">{block.text}</p>
-        <BlogImage
-          className="blog-inline-image--aside"
-          image={{ ...block.image, variant: 'aside' }}
-        />
+        <BlogImage image={{ ...block.image, variant: 'aside' }} />
       </div>
     )
   }
@@ -115,6 +113,7 @@ export default function BlogPost({ post }) {
           />
         </div>
         <BlogContent post={post} />
+        <BlogInteractions slug={post.slug} />
       </article>
     </Layout>
   )
