@@ -68,7 +68,12 @@ function BlogContent({ post }) {
   return (
     <div className="blog-content">
       {post.content.map((section) => (
-        <section className="blog-story-section" key={section.title}>
+        <section
+          className={`blog-story-section${
+            section.layout ? ` blog-story-section--${section.layout}` : ''
+          }`}
+          key={section.title}
+        >
           <h2>{section.title}</h2>
           {section.blocks.map((block, index) => (
             <BlogBlock block={block} key={`${section.title}-${index}`} />

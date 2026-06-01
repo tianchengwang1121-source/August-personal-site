@@ -59,6 +59,7 @@ export const blogPosts = [
     content: [
       {
         type: 'section',
+        layout: 'departure',
         title: 'Departure',
         blocks: [
           {
