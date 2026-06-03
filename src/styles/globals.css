@@ -568,7 +568,7 @@ p {
 
 .journey-globe-card {
   position: absolute;
-  pointer-events: none;
+  pointer-events: auto;
   z-index: 3;
   width: min(190px, 42vw);
   padding: 12px 13px;

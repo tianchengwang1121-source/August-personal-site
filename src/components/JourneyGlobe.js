@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 
 const VIEWBOX = 640
@@ -280,6 +280,7 @@ function getCardPlacement(marker) {
 
 export default function JourneyGlobe({ posts }) {
   const [activeSlug, setActiveSlug] = useState(null)
+  const hideTimerRef = useRef(null)
   const { latitudeLines, longitudeLines } = useMemo(buildGlobeLines, [])
   const landPaths = useMemo(buildLandPaths, [])
 
@@ -304,6 +305,31 @@ export default function JourneyGlobe({ posts }) {
   const activeMarker = markers.find((marker) => marker.post.slug === activeSlug)
   const activeCard = activeMarker ? getCardPlacement(activeMarker) : null
 
+  function clearHideTimer() {
+    if (hideTimerRef.current) {
+      clearTimeout(hideTimerRef.current)
+      hideTimerRef.current = null
+    }
+  }
+
+  function showPreview(slug) {
+    clearHideTimer()
+    setActiveSlug(slug)
+  }
+
+  function hidePreview() {
+    clearHideTimer()
+    setActiveSlug(null)
+  }
+
+  function scheduleHidePreview() {
+    clearHideTimer()
+    hideTimerRef.current = setTimeout(() => {
+      setActiveSlug(null)
+      hideTimerRef.current = null
+    }, 120)
+  }
+
   return (
     <section className="journey-globe" aria-label="Journey globe">
       <div className="journey-globe-heading">
@@ -313,7 +339,7 @@ export default function JourneyGlobe({ posts }) {
 
       <div
         className="journey-globe-stage"
-        onMouseLeave={() => setActiveSlug(null)}
+        onMouseLeave={hidePreview}
       >
         <div
           className={`journey-globe-sphere${
@@ -396,10 +422,10 @@ export default function JourneyGlobe({ posts }) {
             }`}
             href={`/blog/${marker.post.slug}`}
             key={marker.post.slug}
-            onBlur={() => setActiveSlug(null)}
-            onFocus={() => setActiveSlug(marker.post.slug)}
-            onMouseEnter={() => setActiveSlug(marker.post.slug)}
-            onMouseLeave={() => setActiveSlug(null)}
+            onBlur={scheduleHidePreview}
+            onFocus={() => showPreview(marker.post.slug)}
+            onMouseEnter={() => showPreview(marker.post.slug)}
+            onMouseLeave={scheduleHidePreview}
             prefetch={false}
             style={{
               left: `${(marker.x / VIEWBOX) * 100}%`,
@@ -415,6 +441,10 @@ export default function JourneyGlobe({ posts }) {
           <Link
             className={`journey-globe-card journey-globe-card--${activeCard.side}`}
             href={`/blog/${activeMarker.post.slug}`}
+            onBlur={scheduleHidePreview}
+            onFocus={() => showPreview(activeMarker.post.slug)}
+            onMouseEnter={() => showPreview(activeMarker.post.slug)}
+            onMouseLeave={hidePreview}
             prefetch={false}
             style={activeCard.style}
           >
