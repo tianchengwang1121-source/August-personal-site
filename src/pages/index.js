@@ -1,9 +1,29 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import JourneyGlobe from '@/components/JourneyGlobe'
 import Layout from '@/components/Layout'
-import { blogPosts, externalLinks, siteProfile, timelineItems } from '@/data/site'
+import { blogPosts, externalLinks, siteProfile } from '@/data/site'
+
+function formatHomeDate(date) {
+  return date
+    .split('.')
+    .map((part, index) => (index === 0 ? part : part.padStart(2, '0')))
+    .join('.')
+}
 
 export default function Home() {
+  const featuredPost =
+    blogPosts.find((post) => post.slug === 'singapore-airshow') || blogPosts[0]
+  const timelinePreviewPosts = [
+    blogPosts.find((post) => post.slug === 'air-force-one-beijing'),
+    featuredPost,
+  ]
+    .filter(Boolean)
+    .filter(
+      (post, index, posts) =>
+        posts.findIndex((item) => item.slug === post.slug) === index
+    )
+
   return (
     <Layout title="Home">
       <section className="hero">
@@ -52,23 +72,28 @@ export default function Home() {
             <p className="eyebrow">Latest writing</p>
             <h2>Blog</h2>
           </div>
-          <div className="post-list home-blog-scroll" aria-label="Latest blog posts">
-            {blogPosts.map((post) => (
-              <Link
-                className="post-row"
-                href={`/blog/${post.slug}`}
-                key={post.slug}
-              >
-                <div>
-                  <p className="meta">
-                    {post.date} · {post.category}
-                  </p>
-                  <h3>{post.title}</h3>
-                  <p>{post.excerpt}</p>
-                </div>
-              </Link>
-            ))}
-          </div>
+          <Link
+            className="home-featured-post"
+            href={`/blog/${featuredPost.slug}`}
+          >
+            <div className="home-featured-image">
+              <Image
+                src={featuredPost.image}
+                alt={featuredPost.title}
+                width={360}
+                height={260}
+                sizes="(max-width: 760px) 112px, 150px"
+              />
+            </div>
+            <div className="home-featured-copy">
+              <h3>{featuredPost.title}</h3>
+              <p>{featuredPost.excerpt}</p>
+              <span>{formatHomeDate(featuredPost.date)}</span>
+            </div>
+            <span className="home-link-arrow" aria-hidden="true">
+              ›
+            </span>
+          </Link>
         </article>
 
         <article className="panel">
@@ -76,18 +101,31 @@ export default function Home() {
             <p className="eyebrow">Current record</p>
             <h2>Timeline</h2>
           </div>
-          {timelineItems.map((item) => (
-            <Link
-              className="timeline-row timeline-link-row"
-              href={item.href}
-              key={item.href}
-            >
-              <span>{item.date}</span>
-              <div>
-                <h3>{item.location}</h3>
-              </div>
-            </Link>
-          ))}
+          <div className="home-timeline-list">
+            {timelinePreviewPosts.map((post) => (
+              <Link
+                className="home-timeline-item"
+                href={`/blog/${post.slug}`}
+                key={post.slug}
+              >
+                <span className="home-timeline-dot" aria-hidden="true" />
+                <div>
+                  <time>{formatHomeDate(post.date)}</time>
+                  <h3>{post.title}</h3>
+                  <p>
+                    {post.displayLocation || post.location}
+                    {post.globe?.region &&
+                    post.globe.region !== post.displayLocation
+                      ? `, ${post.globe.region}`
+                      : ''}
+                  </p>
+                </div>
+                <span className="home-link-arrow" aria-hidden="true">
+                  ›
+                </span>
+              </Link>
+            ))}
+          </div>
         </article>
       </section>
     </Layout>
