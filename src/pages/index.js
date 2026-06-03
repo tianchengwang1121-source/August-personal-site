@@ -14,15 +14,11 @@ function formatHomeDate(date) {
 export default function Home() {
   const featuredPost =
     blogPosts.find((post) => post.slug === 'singapore-airshow') || blogPosts[0]
-  const timelinePreviewPosts = [
-    blogPosts.find((post) => post.slug === 'air-force-one-beijing'),
+  const writingPreviewPosts = [
     featuredPost,
-  ]
-    .filter(Boolean)
-    .filter(
-      (post, index, posts) =>
-        posts.findIndex((item) => item.slug === post.slug) === index
-    )
+    ...blogPosts.filter((post) => post.slug !== featuredPost.slug),
+  ].slice(0, 2)
+  const timelinePreviewPosts = blogPosts.slice(0, 4)
 
   return (
     <Layout title="Home">
@@ -72,28 +68,33 @@ export default function Home() {
             <p className="eyebrow">Latest writing</p>
             <h2>Blog</h2>
           </div>
-          <Link
-            className="home-featured-post"
-            href={`/blog/${featuredPost.slug}`}
-          >
-            <div className="home-featured-image">
-              <Image
-                src={featuredPost.image}
-                alt={featuredPost.title}
-                width={360}
-                height={260}
-                sizes="(max-width: 760px) 112px, 150px"
-              />
-            </div>
-            <div className="home-featured-copy">
-              <h3>{featuredPost.title}</h3>
-              <p>{featuredPost.excerpt}</p>
-              <span>{formatHomeDate(featuredPost.date)}</span>
-            </div>
-            <span className="home-link-arrow" aria-hidden="true">
-              ›
-            </span>
-          </Link>
+          <div className="home-featured-list">
+            {writingPreviewPosts.map((post) => (
+              <Link
+                className="home-featured-post"
+                href={`/blog/${post.slug}`}
+                key={post.slug}
+              >
+                <div className="home-featured-image">
+                  <Image
+                    src={post.image}
+                    alt={post.title}
+                    width={360}
+                    height={260}
+                    sizes="(max-width: 760px) 96px, 124px"
+                  />
+                </div>
+                <div className="home-featured-copy">
+                  <h3>{post.title}</h3>
+                  <p>{post.excerpt}</p>
+                  <span>{formatHomeDate(post.date)}</span>
+                </div>
+                <span className="home-link-arrow" aria-hidden="true">
+                  ›
+                </span>
+              </Link>
+            ))}
+          </div>
         </article>
 
         <article className="panel">
