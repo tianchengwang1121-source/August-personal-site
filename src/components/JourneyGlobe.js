@@ -8,6 +8,148 @@ const CENTER_LAT = 16
 const CENTER_LNG = 105
 const DEG_TO_RAD = Math.PI / 180
 
+const LANDMASSES = [
+  {
+    name: 'eurasia',
+    points: [
+      [68, -10],
+      [71, 28],
+      [68, 58],
+      [72, 92],
+      [65, 124],
+      [57, 150],
+      [46, 152],
+      [39, 137],
+      [35, 123],
+      [29, 121],
+      [23, 116],
+      [20, 108],
+      [12, 103],
+      [5, 99],
+      [7, 89],
+      [18, 76],
+      [8, 78],
+      [13, 64],
+      [24, 58],
+      [30, 48],
+      [38, 41],
+      [42, 28],
+      [48, 18],
+      [54, 8],
+      [58, -5],
+      [68, -10],
+    ],
+  },
+  {
+    name: 'arabia',
+    points: [
+      [31, 36],
+      [28, 48],
+      [22, 55],
+      [13, 52],
+      [12, 43],
+      [18, 38],
+      [25, 35],
+      [31, 36],
+    ],
+  },
+  {
+    name: 'india',
+    points: [
+      [24, 67],
+      [28, 78],
+      [22, 87],
+      [12, 80],
+      [9, 73],
+      [16, 68],
+      [24, 67],
+    ],
+  },
+  {
+    name: 'southeast-asia',
+    points: [
+      [23, 98],
+      [21, 106],
+      [16, 109],
+      [10, 105],
+      [6, 101],
+      [3, 104],
+      [7, 112],
+      [13, 121],
+      [18, 123],
+      [22, 117],
+      [18, 110],
+      [23, 98],
+    ],
+  },
+  {
+    name: 'africa',
+    points: [
+      [36, -16],
+      [33, 8],
+      [24, 31],
+      [12, 42],
+      [-4, 41],
+      [-18, 34],
+      [-34, 23],
+      [-35, 14],
+      [-25, 4],
+      [-10, -7],
+      [8, -14],
+      [23, -17],
+      [36, -16],
+    ],
+  },
+  {
+    name: 'australia',
+    points: [
+      [-12, 113],
+      [-18, 128],
+      [-25, 147],
+      [-37, 150],
+      [-43, 137],
+      [-36, 119],
+      [-24, 112],
+      [-12, 113],
+    ],
+  },
+  {
+    name: 'japan',
+    points: [
+      [43, 141],
+      [39, 142],
+      [35, 139],
+      [32, 132],
+      [35, 130],
+      [39, 136],
+      [43, 141],
+    ],
+  },
+  {
+    name: 'taiwan',
+    points: [
+      [25.5, 121],
+      [23.5, 122],
+      [21.8, 121],
+      [23.4, 120],
+      [25.5, 121],
+    ],
+  },
+  {
+    name: 'indonesia',
+    points: [
+      [4, 96],
+      [1, 106],
+      [-5, 116],
+      [-8, 128],
+      [-4, 137],
+      [1, 125],
+      [3, 111],
+      [4, 96],
+    ],
+  },
+]
+
 function projectPoint(lat, lng) {
   const latitude = lat * DEG_TO_RAD
   const longitude = (lng - CENTER_LNG) * DEG_TO_RAD
@@ -46,6 +188,17 @@ function projectedLine(points) {
   return linePath(visible)
 }
 
+function projectedPolygon(points) {
+  const projected = points.map(([lat, lng]) => projectPoint(lat, lng))
+  const visible = projected.filter((point) => point.visible)
+
+  if (visible.length < 3) {
+    return null
+  }
+
+  return `${linePath(visible)} Z`
+}
+
 function buildGlobeLines() {
   const latitudeLines = [-60, -30, 0, 30, 60]
     .map((lat) =>
@@ -66,6 +219,13 @@ function buildGlobeLines() {
   return { latitudeLines, longitudeLines }
 }
 
+function buildLandPaths() {
+  return LANDMASSES.map((land) => ({
+    name: land.name,
+    path: projectedPolygon(land.points),
+  })).filter((land) => land.path)
+}
+
 function getMarkerOffset(post, index) {
   if (post.globe.city !== 'Hong Kong') {
     return { x: 0, y: 0 }
@@ -82,9 +242,46 @@ function formatPlace(globe) {
   return `${globe.city}, ${globe.region}`
 }
 
+function getCardPlacement(marker) {
+  if (marker.x < CENTER - 72) {
+    return {
+      side: 'right',
+      style: {
+        left: `${(marker.x / VIEWBOX) * 100}%`,
+        top: `${(marker.y / VIEWBOX) * 100}%`,
+        '--card-x': '20px',
+        '--card-y': '-50%',
+      },
+    }
+  }
+
+  if (marker.x > CENTER + 72) {
+    return {
+      side: 'left',
+      style: {
+        left: `${(marker.x / VIEWBOX) * 100}%`,
+        top: `${(marker.y / VIEWBOX) * 100}%`,
+        '--card-x': 'calc(-100% - 20px)',
+        '--card-y': '-50%',
+      },
+    }
+  }
+
+  return {
+    side: marker.y < CENTER ? 'bottom' : 'top',
+    style: {
+      left: `${(marker.x / VIEWBOX) * 100}%`,
+      top: `${(marker.y / VIEWBOX) * 100}%`,
+      '--card-x': '-50%',
+      '--card-y': marker.y < CENTER ? '20px' : 'calc(-100% - 20px)',
+    },
+  }
+}
+
 export default function JourneyGlobe({ posts }) {
   const [activeSlug, setActiveSlug] = useState(null)
   const { latitudeLines, longitudeLines } = useMemo(buildGlobeLines, [])
+  const landPaths = useMemo(buildLandPaths, [])
 
   const markers = useMemo(
     () =>
@@ -105,6 +302,7 @@ export default function JourneyGlobe({ posts }) {
   )
 
   const activeMarker = markers.find((marker) => marker.post.slug === activeSlug)
+  const activeCard = activeMarker ? getCardPlacement(activeMarker) : null
 
   return (
     <section className="journey-globe" aria-label="Journey globe">
@@ -117,7 +315,12 @@ export default function JourneyGlobe({ posts }) {
         className="journey-globe-stage"
         onMouseLeave={() => setActiveSlug(null)}
       >
-        <div className="journey-globe-sphere" aria-hidden="true">
+        <div
+          className={`journey-globe-sphere${
+            activeMarker ? ' is-previewing' : ''
+          }`}
+          aria-hidden="true"
+        >
           <svg viewBox={`0 0 ${VIEWBOX} ${VIEWBOX}`} role="img">
             <defs>
               <radialGradient id="globeSurface" cx="42%" cy="34%" r="68%">
@@ -173,14 +376,13 @@ export default function JourneyGlobe({ posts }) {
                   key={`lng-${index}`}
                 />
               ))}
-              <path
-                className="journey-globe-land"
-                d="M246 220c36-30 90-35 132-15 29 14 50 33 82 30 28-3 40 16 24 38-19 27-58 21-86 28-40 10-58 44-99 44-45 0-75-30-96-63-16-26 9-54 43-62Z"
-              />
-              <path
-                className="journey-globe-land journey-globe-land--south"
-                d="M348 372c31-7 76-3 94 18 13 15 0 36-30 36-36 0-72-4-102-18-21-10-11-29 38-36Z"
-              />
+              {landPaths.map((land) => (
+                <path
+                  className={`journey-globe-land journey-globe-land--${land.name}`}
+                  d={land.path}
+                  key={land.name}
+                />
+              ))}
             </g>
             <circle cx={CENTER} cy={CENTER} r={RADIUS} fill="url(#globeShade)" />
             <circle className="journey-globe-rim" cx={CENTER} cy={CENTER} r={RADIUS} />
@@ -194,8 +396,11 @@ export default function JourneyGlobe({ posts }) {
             }`}
             href={`/blog/${marker.post.slug}`}
             key={marker.post.slug}
+            onBlur={() => setActiveSlug(null)}
             onFocus={() => setActiveSlug(marker.post.slug)}
             onMouseEnter={() => setActiveSlug(marker.post.slug)}
+            onMouseLeave={() => setActiveSlug(null)}
+            prefetch={false}
             style={{
               left: `${(marker.x / VIEWBOX) * 100}%`,
               top: `${(marker.y / VIEWBOX) * 100}%`,
@@ -206,14 +411,12 @@ export default function JourneyGlobe({ posts }) {
           </Link>
         ))}
 
-        {activeMarker && (
+        {activeMarker && activeCard && (
           <Link
-            className="journey-globe-card"
+            className={`journey-globe-card journey-globe-card--${activeCard.side}`}
             href={`/blog/${activeMarker.post.slug}`}
-            style={{
-              left: `${(activeMarker.x / VIEWBOX) * 100}%`,
-              top: `${(activeMarker.y / VIEWBOX) * 100}%`,
-            }}
+            prefetch={false}
+            style={activeCard.style}
           >
             <span>{formatPlace(activeMarker.post.globe)}</span>
             <strong>{activeMarker.post.displayLocation || activeMarker.post.location}</strong>
