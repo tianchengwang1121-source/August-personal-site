@@ -36,6 +36,12 @@ export const blogPosts = [
     image: '/images/blog/air-force-one-beijing.jpg',
     excerpt: '这是一行测试文字，记录在北京拍摄空军一号的经历。',
     body: '这是一行测试正文，记录在北京拍摄空军一号的经历。',
+    globe: {
+      city: 'Beijing',
+      region: 'China',
+      lat: 39.9042,
+      lng: 116.4074,
+    },
   },
   {
     slug: 'hkia-rescue-exercise',
@@ -47,6 +53,12 @@ export const blogPosts = [
     image: '/images/blog/hkia-rescue-exercise.jpg',
     excerpt: '这是一行测试文字，记录 HKIA 年度救援演习。',
     body: '这是一行测试正文，记录 HKIA 年度救援演习。',
+    globe: {
+      city: 'Hong Kong',
+      region: 'Hong Kong',
+      lat: 22.308,
+      lng: 113.9185,
+    },
   },
   {
     slug: 'singapore-airshow',
@@ -59,6 +71,12 @@ export const blogPosts = [
     excerpt: '期待了近一个月的新加坡航展旅程，从凌晨的 HKG 出发，到落地后的第一眼南洋印象。',
     body: '期待了近一个月的新加坡航展旅程，从凌晨的 HKG 出发，到落地后的第一眼南洋印象。',
     tags: ['aviation', 'airshow', 'photography', 'travel'],
+    globe: {
+      city: 'Singapore',
+      region: 'Singapore',
+      lat: 1.3521,
+      lng: 103.8198,
+    },
     content: [
       {
         type: 'section',
@@ -140,6 +158,12 @@ export const blogPosts = [
     image: '/images/blog/taipei-trip.jpg',
     excerpt: '这是一行测试文字，记录新年第一天的台北之行。',
     body: '这是一行测试正文，记录新年第一天的台北之行。',
+    globe: {
+      city: 'Taipei',
+      region: 'Taiwan',
+      lat: 25.033,
+      lng: 121.5654,
+    },
   },
   {
     slug: 'bangkok-trip',
@@ -151,6 +175,12 @@ export const blogPosts = [
     image: '/images/blog/bangkok-trip.jpg',
     excerpt: '这是一行测试文字，记录这次曼谷之行。',
     body: '这是一行测试正文，记录这次曼谷之行。',
+    globe: {
+      city: 'Bangkok',
+      region: 'Thailand',
+      lat: 13.7563,
+      lng: 100.5018,
+    },
   },
   {
     slug: 'lufthansa-a340-hkia',
@@ -162,6 +192,12 @@ export const blogPosts = [
     image: '/images/blog/lufthansa-a340-hkia.jpg',
     excerpt: '这是一行测试文字，记录在香港机场送别汉莎 A340 的一天。',
     body: '这是一行测试正文，记录在香港机场送别汉莎 A340 的一天。',
+    globe: {
+      city: 'Hong Kong',
+      region: 'Hong Kong',
+      lat: 22.308,
+      lng: 113.9185,
+    },
   },
 ]
 

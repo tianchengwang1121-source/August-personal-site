@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import JourneyGlobe from '@/components/JourneyGlobe'
 import Layout from '@/components/Layout'
 import { blogPosts, externalLinks, siteProfile, timelineItems } from '@/data/site'
 
@@ -42,6 +43,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <JourneyGlobe posts={blogPosts} />
 
       <section className="section-grid" aria-label="Homepage overview">
         <article className="panel large-panel">
