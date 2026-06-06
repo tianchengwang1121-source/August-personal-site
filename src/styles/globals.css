@@ -491,6 +491,23 @@ p {
   user-select: none;
 }
 
+.journey-map-viewport {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  contain: layout paint style;
+}
+
+.journey-map-world-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  shape-rendering: geometricPrecision;
+  user-select: none;
+}
+
 .journey-map-surface {
   fill: url('#journeyMapSurface');
   filter: url('#journeyMapLift');
@@ -533,8 +550,12 @@ p {
 }
 
 .journey-map-zoom-layer {
-  transform-box: fill-box;
+  position: absolute;
+  inset: 0;
   transform-origin: 0 0;
+  will-change: transform;
+  contain: layout paint style;
+  backface-visibility: hidden;
 }
 
 .journey-map-outline {

@@ -100,8 +100,8 @@ function transformPoint(marker, zoom) {
   }
 }
 
-function getZoomTransform(zoom) {
-  return `translate(${zoom.x} ${zoom.y}) scale(${zoom.scale})`
+function getZoomCssTransform(zoom) {
+  return `translate3d(${(zoom.x / VIEWBOX_WIDTH) * 100}%, ${(zoom.y / VIEWBOX_HEIGHT) * 100}%, 0) scale(${zoom.scale})`
 }
 
 function getMarkerCounterScale(scale) {
@@ -266,7 +266,9 @@ export default function JourneyGlobe({ posts }) {
   const postCount = markers.reduce((count, marker) => count + marker.posts.length, 0)
 
   function applyZoomToDom(nextZoom) {
-    zoomLayerRef.current?.setAttribute('transform', getZoomTransform(nextZoom))
+    if (zoomLayerRef.current) {
+      zoomLayerRef.current.style.transform = getZoomCssTransform(nextZoom)
+    }
 
     markerSymbolRefs.current.forEach((node, key) => {
       const marker = markerByKeyRef.current.get(key)
@@ -301,12 +303,15 @@ export default function JourneyGlobe({ posts }) {
     }
   }
 
-  function applyZoomImmediately(nextZoom) {
+  function applyZoomImmediately(nextZoom, options = {}) {
     cancelZoomFrame()
     zoomRef.current = nextZoom
     visualZoomRef.current = nextZoom
     applyZoomToDomRef.current?.(nextZoom)
-    syncZoomStateSoon()
+
+    if (options.sync !== false) {
+      syncZoomStateSoon()
+    }
   }
 
   function flushZoomState() {
@@ -354,7 +359,7 @@ export default function JourneyGlobe({ posts }) {
     zoomRef.current = nextZoom
 
     if (options.immediate) {
-      applyZoomImmediately(nextZoom)
+      applyZoomImmediately(nextZoom, options)
       return
     }
 
@@ -594,7 +599,7 @@ export default function JourneyGlobe({ posts }) {
           x: focus.x - (focus.x - current.x) * ratio,
           y: focus.y - (focus.y - current.y) * ratio,
         }),
-        { immediate: true }
+        { immediate: true, sync: false }
       )
 
       return
@@ -619,7 +624,7 @@ export default function JourneyGlobe({ posts }) {
         x: drag.zoom.x + deltaX,
         y: drag.zoom.y + deltaY,
       }),
-      { immediate: true }
+      { immediate: true, sync: false }
     )
   }
 
@@ -724,10 +729,27 @@ export default function JourneyGlobe({ posts }) {
                 x={MAP_X}
                 y={MAP_Y}
               />
-              <g
-                className="journey-map-zoom-layer"
-                ref={zoomLayerRef}
-                transform={getZoomTransform(zoom)}
+            </g>
+            <rect
+              className="journey-map-outline"
+              height={MAP_HEIGHT}
+              rx={MAP_RADIUS}
+              width={MAP_WIDTH}
+              x={MAP_X}
+              y={MAP_Y}
+            />
+          </svg>
+
+          <div className="journey-map-viewport">
+            <div
+              className="journey-map-zoom-layer"
+              ref={zoomLayerRef}
+              style={{ transform: getZoomCssTransform(zoom) }}
+            >
+              <svg
+                aria-hidden="true"
+                className="journey-map-world-canvas"
+                viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
               >
                 <path className="journey-map-graticule" d={mapPaths.graticule} />
                 <path className="journey-map-land" d={mapPaths.land} />
@@ -764,17 +786,9 @@ export default function JourneyGlobe({ posts }) {
                     </g>
                   </a>
                 ))}
-              </g>
-            </g>
-            <rect
-              className="journey-map-outline"
-              height={MAP_HEIGHT}
-              rx={MAP_RADIUS}
-              width={MAP_WIDTH}
-              x={MAP_X}
-              y={MAP_Y}
-            />
-          </svg>
+              </svg>
+            </div>
+          </div>
 
           {activeMarker && activeCard && (
             <div
