@@ -14,7 +14,9 @@ const MAP_WIDTH = VIEWBOX_WIDTH - MAP_PADDING * 2
 const MAP_HEIGHT = VIEWBOX_HEIGHT - MAP_PADDING * 2
 const MIN_ZOOM = 1
 const MAX_ZOOM = 5.4
-const WHEEL_SENSITIVITY = 0.0022
+const WHEEL_SENSITIVITY = 0.0032
+const PINCH_WHEEL_SENSITIVITY = 0.006
+const ZOOM_SYNC_DELAY = 80
 const DEFAULT_ZOOM = { scale: 1, x: 0, y: 0 }
 
 const mapFrame = [
@@ -93,6 +95,47 @@ function transformPoint(marker, zoom) {
   }
 }
 
+function getZoomTransform(zoom) {
+  return `translate(${zoom.x} ${zoom.y}) scale(${zoom.scale})`
+}
+
+function getMarkerStyle(marker) {
+  return {
+    left: `${(marker.x / VIEWBOX_WIDTH) * 100}%`,
+    top: `${(marker.y / VIEWBOX_HEIGHT) * 100}%`,
+    opacity: marker.visible ? '1' : '0',
+    pointerEvents: marker.visible ? 'auto' : 'none',
+  }
+}
+
+function getViewboxPoint(clientX, clientY, rect) {
+  return {
+    x: ((clientX - rect.left) / rect.width) * VIEWBOX_WIDTH,
+    y: ((clientY - rect.top) / rect.height) * VIEWBOX_HEIGHT,
+  }
+}
+
+function getPointerDistance(first, second) {
+  return Math.hypot(first.clientX - second.clientX, first.clientY - second.clientY)
+}
+
+function getPinchMetrics(pointers, rect) {
+  const [first, second] = Array.from(pointers.values())
+
+  if (!first || !second) {
+    return null
+  }
+
+  return {
+    distance: getPointerDistance(first, second),
+    focus: getViewboxPoint(
+      (first.clientX + second.clientX) / 2,
+      (first.clientY + second.clientY) / 2,
+      rect
+    ),
+  }
+}
+
 function getCardPlacement(marker) {
   if (marker.x > VIEWBOX_WIDTH * 0.66) {
     return {
@@ -137,6 +180,13 @@ export default function JourneyGlobe({ posts }) {
   const stageRef = useRef(null)
   const dragRef = useRef(null)
   const hideTimerRef = useRef(null)
+  const markerNodeRefs = useRef(new Map())
+  const markersRef = useRef([])
+  const pinchRef = useRef(null)
+  const pointerRefs = useRef(new Map())
+  const syncTimerRef = useRef(null)
+  const setZoomSmoothRef = useRef(null)
+  const zoomLayerRef = useRef(null)
   const zoomRef = useRef(DEFAULT_ZOOM)
   const zoomFrameRef = useRef(null)
 
@@ -173,6 +223,7 @@ export default function JourneyGlobe({ posts }) {
     },
     [posts]
   )
+  markersRef.current = markers
 
   const visibleMarkers = useMemo(
     () => markers.map((marker) => transformPoint(marker, zoom)),
@@ -183,6 +234,44 @@ export default function JourneyGlobe({ posts }) {
   const activeCard = activeMarker ? getCardPlacement(activeMarker) : null
   const postCount = markers.reduce((count, marker) => count + marker.posts.length, 0)
 
+  function applyZoomToDom(nextZoom) {
+    zoomLayerRef.current?.setAttribute('transform', getZoomTransform(nextZoom))
+
+    markersRef.current.forEach((marker) => {
+      const node = markerNodeRefs.current.get(marker.key)
+
+      if (!node) {
+        return
+      }
+
+      const style = getMarkerStyle(transformPoint(marker, nextZoom))
+      node.style.left = style.left
+      node.style.top = style.top
+      node.style.opacity = style.opacity
+      node.style.pointerEvents = style.pointerEvents
+    })
+  }
+
+  function syncZoomStateSoon() {
+    if (syncTimerRef.current) {
+      clearTimeout(syncTimerRef.current)
+    }
+
+    syncTimerRef.current = setTimeout(() => {
+      syncTimerRef.current = null
+      setZoom(zoomRef.current)
+    }, ZOOM_SYNC_DELAY)
+  }
+
+  function flushZoomState() {
+    if (syncTimerRef.current) {
+      clearTimeout(syncTimerRef.current)
+      syncTimerRef.current = null
+    }
+
+    setZoom(zoomRef.current)
+  }
+
   function setZoomSmooth(nextZoom) {
     zoomRef.current = nextZoom
 
@@ -192,18 +281,29 @@ export default function JourneyGlobe({ posts }) {
 
     zoomFrameRef.current = requestAnimationFrame(() => {
       zoomFrameRef.current = null
-      setZoom(zoomRef.current)
+      applyZoomToDom(zoomRef.current)
     })
+
+    syncZoomStateSoon()
   }
+  setZoomSmoothRef.current = setZoomSmooth
 
   useEffect(
     () => () => {
       if (zoomFrameRef.current) {
         cancelAnimationFrame(zoomFrameRef.current)
       }
+
+      if (syncTimerRef.current) {
+        clearTimeout(syncTimerRef.current)
+      }
     },
     []
   )
+
+  useEffect(() => {
+    applyZoomToDom(zoomRef.current)
+  }, [markers])
 
   useEffect(() => {
     const stage = stageRef.current
@@ -231,15 +331,16 @@ export default function JourneyGlobe({ posts }) {
       const focusY = ((event.clientY - rect.top) / rect.height) * VIEWBOX_HEIGHT
       const deltaMultiplier = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? 100 : 1
       const deltaY = event.deltaY * deltaMultiplier
+      const sensitivity = event.ctrlKey ? PINCH_WHEEL_SENSITIVITY : WHEEL_SENSITIVITY
       const current = zoomRef.current
       const nextScale = clamp(
-        current.scale * Math.exp(-deltaY * WHEEL_SENSITIVITY),
+        current.scale * Math.exp(-deltaY * sensitivity),
         MIN_ZOOM,
         MAX_ZOOM
       )
       const ratio = nextScale / current.scale
 
-      setZoomSmooth(
+      setZoomSmoothRef.current(
         clampZoomTransform({
           scale: nextScale,
           x: focusX - (focusX - current.x) * ratio,
@@ -267,6 +368,7 @@ export default function JourneyGlobe({ posts }) {
 
   function showPreview(key) {
     clearHideTimer()
+    flushZoomState()
     setActiveKey(key)
   }
 
@@ -287,13 +389,35 @@ export default function JourneyGlobe({ posts }) {
     if (
       dragRef.current &&
       typeof event?.pointerId === 'number' &&
+      event.currentTarget?.hasPointerCapture?.(event.pointerId) &&
       event.currentTarget?.releasePointerCapture
     ) {
       event.currentTarget.releasePointerCapture(event.pointerId)
     }
 
     dragRef.current = null
+    pinchRef.current = null
+    pointerRefs.current.clear()
     setIsDragging(false)
+  }
+
+  function startPinch(event) {
+    const rect = event.currentTarget.getBoundingClientRect()
+    const pinch = getPinchMetrics(pointerRefs.current, rect)
+
+    if (!pinch || pinch.distance < 8) {
+      return false
+    }
+
+    pinchRef.current = {
+      focus: pinch.focus,
+      startDistance: pinch.distance,
+      startZoom: zoomRef.current,
+    }
+    dragRef.current = null
+    setIsDragging(false)
+
+    return true
   }
 
   function handlePointerDown(event) {
@@ -307,6 +431,15 @@ export default function JourneyGlobe({ posts }) {
     event.preventDefault()
     clearHideTimer()
     setActiveKey(null)
+    pointerRefs.current.set(event.pointerId, {
+      clientX: event.clientX,
+      clientY: event.clientY,
+    })
+    event.currentTarget.setPointerCapture?.(event.pointerId)
+
+    if (pointerRefs.current.size >= 2 && startPinch(event)) {
+      return
+    }
 
     const rect = event.currentTarget.getBoundingClientRect()
 
@@ -318,11 +451,51 @@ export default function JourneyGlobe({ posts }) {
       zoom: zoomRef.current,
     }
 
-    event.currentTarget.setPointerCapture?.(event.pointerId)
     setIsDragging(true)
   }
 
   function handlePointerMove(event) {
+    if (pointerRefs.current.has(event.pointerId)) {
+      pointerRefs.current.set(event.pointerId, {
+        clientX: event.clientX,
+        clientY: event.clientY,
+      })
+    }
+
+    if (pointerRefs.current.size >= 2) {
+      event.preventDefault()
+
+      if (!pinchRef.current && !startPinch(event)) {
+        return
+      }
+
+      const rect = event.currentTarget.getBoundingClientRect()
+      const pinch = getPinchMetrics(pointerRefs.current, rect)
+
+      if (!pinch || pinch.distance < 8) {
+        return
+      }
+
+      const current = pinchRef.current.startZoom
+      const nextScale = clamp(
+        current.scale * (pinch.distance / pinchRef.current.startDistance),
+        MIN_ZOOM,
+        MAX_ZOOM
+      )
+      const ratio = nextScale / current.scale
+      const focus = pinchRef.current.focus
+
+      setZoomSmooth(
+        clampZoomTransform({
+          scale: nextScale,
+          x: focus.x - (focus.x - current.x) * ratio,
+          y: focus.y - (focus.y - current.y) * ratio,
+        })
+      )
+
+      return
+    }
+
     const drag = dragRef.current
 
     if (!drag) {
@@ -345,6 +518,25 @@ export default function JourneyGlobe({ posts }) {
     )
   }
 
+  function handlePointerEnd(event) {
+    if (
+      event.currentTarget?.hasPointerCapture?.(event.pointerId) &&
+      event.currentTarget?.releasePointerCapture
+    ) {
+      event.currentTarget.releasePointerCapture(event.pointerId)
+    }
+
+    pointerRefs.current.delete(event.pointerId)
+
+    if (pointerRefs.current.size < 2) {
+      pinchRef.current = null
+    }
+
+    dragRef.current = null
+    setIsDragging(false)
+    flushZoomState()
+  }
+
   function handleStageLeave() {
     hidePreview()
     stopDragging()
@@ -360,10 +552,10 @@ export default function JourneyGlobe({ posts }) {
       <div
         className={`journey-globe-stage${isDragging ? ' is-dragging' : ''}`}
         onMouseLeave={handleStageLeave}
-        onPointerCancel={stopDragging}
+        onPointerCancel={handlePointerEnd}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
-        onPointerUp={stopDragging}
+        onPointerUp={handlePointerEnd}
         ref={stageRef}
       >
         <div
@@ -429,7 +621,8 @@ export default function JourneyGlobe({ posts }) {
               />
               <g
                 className="journey-map-zoom-layer"
-                transform={`translate(${zoom.x} ${zoom.y}) scale(${zoom.scale})`}
+                ref={zoomLayerRef}
+                transform={getZoomTransform(zoom)}
               >
                 <path className="journey-map-graticule" d={mapPaths.graticule} />
                 <path className="journey-map-land" d={mapPaths.land} />
@@ -459,6 +652,13 @@ export default function JourneyGlobe({ posts }) {
               onMouseEnter={() => showPreview(marker.key)}
               onMouseLeave={scheduleHidePreview}
               prefetch={false}
+              ref={(node) => {
+                if (node) {
+                  markerNodeRefs.current.set(marker.key, node)
+                } else {
+                  markerNodeRefs.current.delete(marker.key)
+                }
+              }}
               style={{
                 left: `${(marker.x / VIEWBOX_WIDTH) * 100}%`,
                 top: `${(marker.y / VIEWBOX_HEIGHT) * 100}%`,

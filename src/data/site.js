@@ -39,8 +39,8 @@ export const blogPosts = [
     globe: {
       city: 'Beijing',
       region: 'China',
-      lat: 40.0801,
-      lng: 116.5846,
+      lat: 39.9075,
+      lng: 116.39723,
     },
   },
   {
@@ -56,8 +56,8 @@ export const blogPosts = [
     globe: {
       city: 'Hong Kong',
       region: 'Hong Kong',
-      lat: 22.308,
-      lng: 113.9185,
+      lat: 22.27832,
+      lng: 114.17469,
     },
   },
   {
@@ -74,8 +74,8 @@ export const blogPosts = [
     globe: {
       city: 'Singapore',
       region: 'Singapore',
-      lat: 1.3616,
-      lng: 103.9891,
+      lat: 1.352083,
+      lng: 103.819836,
     },
     content: [
       {
@@ -161,8 +161,8 @@ export const blogPosts = [
     globe: {
       city: 'Taipei',
       region: 'Taiwan',
-      lat: 25.033,
-      lng: 121.5654,
+      lat: 25.05306,
+      lng: 121.52639,
     },
   },
   {
@@ -178,8 +178,8 @@ export const blogPosts = [
     globe: {
       city: 'Bangkok',
       region: 'Thailand',
-      lat: 13.7563,
-      lng: 100.5018,
+      lat: 13.75398,
+      lng: 100.50144,
     },
   },
   {
@@ -195,8 +195,8 @@ export const blogPosts = [
     globe: {
       city: 'Hong Kong',
       region: 'Hong Kong',
-      lat: 22.308,
-      lng: 113.9185,
+      lat: 22.27832,
+      lng: 114.17469,
     },
   },
 ]
