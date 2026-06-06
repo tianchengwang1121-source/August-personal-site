@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { geoEquirectangular, geoGraticule, geoPath } from 'd3-geo'
 import { feature, mesh } from 'topojson-client'
+import chinaProvinces from '../data/china-provinces.json'
 import worldAtlas from 'world-atlas/countries-10m.json'
 
 const VIEWBOX_WIDTH = 960
@@ -18,9 +19,6 @@ const WHEEL_SENSITIVITY = 0.0026
 const PINCH_WHEEL_SENSITIVITY = 0.0034
 const MAX_WHEEL_DELTA = 92
 const TRACKPAD_SCROLL_DELTA = 82
-const ZOOM_EASE = 0.42
-const ZOOM_SCALE_EPSILON = 0.0035
-const ZOOM_PAN_EPSILON = 0.28
 const ZOOM_SYNC_DELAY = 180
 const MAX_CANVAS_DPR = 3
 const DEFAULT_ZOOM = { scale: 1, x: 0, y: 0 }
@@ -166,6 +164,7 @@ function getCardPlacement(marker) {
         top: `${(marker.y / VIEWBOX_HEIGHT) * 100}%`,
         '--card-x': 'calc(-100% - 18px)',
         '--card-y': '-50%',
+        '--card-origin': '100% 50%',
       },
     }
   }
@@ -178,6 +177,7 @@ function getCardPlacement(marker) {
         top: `${(marker.y / VIEWBOX_HEIGHT) * 100}%`,
         '--card-x': '18px',
         '--card-y': '-50%',
+        '--card-origin': '0% 50%',
       },
     }
   }
@@ -190,6 +190,7 @@ function getCardPlacement(marker) {
       '--card-x': '-50%',
       '--card-y':
         marker.y < VIEWBOX_HEIGHT * 0.5 ? '18px' : 'calc(-100% - 18px)',
+      '--card-origin': marker.y < VIEWBOX_HEIGHT * 0.5 ? '50% 0%' : '50% 100%',
     },
   }
 }
@@ -244,9 +245,11 @@ export default function JourneyGlobe({ posts }) {
   const visualZoomRef = useRef(DEFAULT_ZOOM)
   const zoomRef = useRef(DEFAULT_ZOOM)
   const zoomFrameRef = useRef(null)
+  const shouldSyncAfterFrameRef = useRef(false)
 
   const mapPaths = useMemo(
     () => ({
+      chinaProvinces: mapPath(chinaProvinces),
       graticule: mapPath(graticule()),
       land: mapPath(landFeature),
       coastline: mapPath(coastlineMesh),
@@ -334,6 +337,14 @@ export default function JourneyGlobe({ posts }) {
     context.stroke(paths.borders)
     context.globalAlpha = 1
 
+    if (nextZoom.scale >= 1.45) {
+      context.globalAlpha = 0.74
+      context.strokeStyle = 'rgba(17, 17, 19, 0.21)'
+      context.lineWidth = 0.3 / lineScale
+      context.stroke(paths.chinaProvinces)
+      context.globalAlpha = 1
+    }
+
     context.restore()
   }
 
@@ -378,6 +389,27 @@ export default function JourneyGlobe({ posts }) {
     }
   }
 
+  function scheduleZoomFrame(options = {}) {
+    if (options.sync !== false) {
+      shouldSyncAfterFrameRef.current = true
+    }
+
+    if (zoomFrameRef.current) {
+      return
+    }
+
+    zoomFrameRef.current = requestAnimationFrame(() => {
+      zoomFrameRef.current = null
+      visualZoomRef.current = zoomRef.current
+      applyZoomToDomRef.current?.(visualZoomRef.current)
+
+      if (shouldSyncAfterFrameRef.current) {
+        shouldSyncAfterFrameRef.current = false
+        syncZoomStateSoon()
+      }
+    })
+  }
+
   function applyZoomImmediately(nextZoom, options = {}) {
     cancelZoomFrame()
     zoomRef.current = nextZoom
@@ -402,34 +434,6 @@ export default function JourneyGlobe({ posts }) {
     setZoom(zoomRef.current)
   }
 
-  function animateZoomToTarget() {
-    zoomFrameRef.current = requestAnimationFrame(() => {
-      const current = visualZoomRef.current
-      const target = zoomRef.current
-      const nextZoom = {
-        scale: current.scale + (target.scale - current.scale) * ZOOM_EASE,
-        x: current.x + (target.x - current.x) * ZOOM_EASE,
-        y: current.y + (target.y - current.y) * ZOOM_EASE,
-      }
-      const isSettled =
-        Math.abs(nextZoom.scale - target.scale) < ZOOM_SCALE_EPSILON &&
-        Math.abs(nextZoom.x - target.x) < ZOOM_PAN_EPSILON &&
-        Math.abs(nextZoom.y - target.y) < ZOOM_PAN_EPSILON
-      const visualZoom = isSettled ? target : nextZoom
-
-      visualZoomRef.current = visualZoom
-      applyZoomToDomRef.current?.(visualZoom)
-
-      if (isSettled) {
-        zoomFrameRef.current = null
-        syncZoomStateSoon()
-        return
-      }
-
-      animateZoomToTarget()
-    })
-  }
-
   function setZoomSmooth(nextZoom, options = {}) {
     zoomRef.current = nextZoom
 
@@ -438,11 +442,7 @@ export default function JourneyGlobe({ posts }) {
       return
     }
 
-    if (zoomFrameRef.current) {
-      return
-    }
-
-    animateZoomToTarget()
+    scheduleZoomFrame(options)
   }
   setZoomSmoothRef.current = setZoomSmooth
 
@@ -464,6 +464,7 @@ export default function JourneyGlobe({ posts }) {
 
     pathsRef.current = {
       borders: new Path2D(mapPaths.borders),
+      chinaProvinces: new Path2D(mapPaths.chinaProvinces),
       coastline: new Path2D(mapPaths.coastline),
       graticule: new Path2D(mapPaths.graticule),
       land: new Path2D(mapPaths.land),
@@ -533,12 +534,13 @@ export default function JourneyGlobe({ posts }) {
 
       const delta = getWheelDelta(event)
 
+      event.preventDefault()
+      event.stopPropagation()
+
       if (!shouldWheelZoom(event, delta)) {
         return
       }
 
-      event.preventDefault()
-      event.stopPropagation()
       resetPointerGestureRef.current?.()
 
       const focusX = ((event.clientX - rect.left) / rect.width) * VIEWBOX_WIDTH
@@ -716,7 +718,7 @@ export default function JourneyGlobe({ posts }) {
           x: focus.x - (focus.x - current.x) * ratio,
           y: focus.y - (focus.y - current.y) * ratio,
         }),
-        { immediate: true, sync: false }
+        { sync: false }
       )
 
       return
@@ -741,7 +743,7 @@ export default function JourneyGlobe({ posts }) {
         x: drag.zoom.x + deltaX,
         y: drag.zoom.y + deltaY,
       }),
-      { immediate: true, sync: false }
+      { sync: false }
     )
   }
 
@@ -914,7 +916,7 @@ export default function JourneyGlobe({ posts }) {
               onBlur={scheduleHidePreview}
               onFocus={() => showPreview(activeMarker.key)}
               onMouseEnter={() => showPreview(activeMarker.key)}
-              onMouseLeave={hidePreview}
+              onMouseLeave={scheduleHidePreview}
               style={activeCard.style}
             >
               <span>{formatPlace(activeMarker.globe)}</span>
