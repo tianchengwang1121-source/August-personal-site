@@ -501,10 +501,12 @@ p {
 }
 
 .journey-map-world-canvas {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
   height: 100%;
-  shape-rendering: geometricPrecision;
+  pointer-events: none;
   user-select: none;
 }
 
@@ -549,13 +551,10 @@ p {
   vector-effect: non-scaling-stroke;
 }
 
-.journey-map-zoom-layer {
+.journey-map-marker-layer {
   position: absolute;
   inset: 0;
-  transform-origin: 0 0;
-  will-change: transform;
-  contain: layout paint style;
-  backface-visibility: hidden;
+  pointer-events: none;
 }
 
 .journey-map-outline {
@@ -565,42 +564,60 @@ p {
 }
 
 .journey-map-marker-link {
+  position: absolute;
+  z-index: 2;
+  display: block;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  color: var(--text);
   cursor: pointer;
   outline: none;
+  pointer-events: auto;
+  transform: translate(-50%, -50%);
+  transition: opacity 90ms linear;
 }
 
 .journey-map-marker-hit {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
   fill: transparent;
-  pointer-events: all;
 }
 
 .journey-map-marker-halo,
 .journey-map-marker-ring,
 .journey-map-marker-core {
-  vector-effect: non-scaling-stroke;
+  position: absolute;
+  inset: 50% auto auto 50%;
+  border-radius: 999px;
+  transform: translate(-50%, -50%);
 }
 
 .journey-map-marker-halo {
-  fill: rgba(17, 17, 19, 0.12);
+  width: 23px;
+  height: 23px;
+  background: rgba(17, 17, 19, 0.12);
   opacity: 0.72;
   transition: opacity 140ms ease;
 }
 
 .journey-map-marker-ring {
-  fill: none;
+  width: 18px;
+  height: 18px;
+  border: 1.15px solid rgba(17, 17, 19, 0.28);
   opacity: 0.42;
-  stroke: rgba(17, 17, 19, 0.28);
-  stroke-width: 1.15;
   transition: opacity 140ms ease;
 }
 
 .journey-map-marker-core {
-  fill: #111113;
-  stroke: rgba(255, 255, 255, 0.98);
-  stroke-width: 2.35;
-  filter:
-    drop-shadow(0 0 0.8px rgba(17, 17, 19, 0.36))
-    drop-shadow(0 5px 13px rgba(17, 17, 19, 0.22));
+  width: 10.4px;
+  height: 10.4px;
+  border: 2.35px solid rgba(255, 255, 255, 0.98);
+  background: #111113;
+  box-shadow:
+    0 0 0.8px rgba(17, 17, 19, 0.36),
+    0 5px 13px rgba(17, 17, 19, 0.22);
 }
 
 .journey-map-marker-link:hover .journey-map-marker-halo,

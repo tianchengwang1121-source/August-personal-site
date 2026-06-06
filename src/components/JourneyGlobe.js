@@ -18,10 +18,11 @@ const WHEEL_SENSITIVITY = 0.0026
 const PINCH_WHEEL_SENSITIVITY = 0.0034
 const MAX_WHEEL_DELTA = 92
 const TRACKPAD_SCROLL_DELTA = 82
-const ZOOM_EASE = 0.26
-const ZOOM_SCALE_EPSILON = 0.0025
-const ZOOM_PAN_EPSILON = 0.18
+const ZOOM_EASE = 0.42
+const ZOOM_SCALE_EPSILON = 0.0035
+const ZOOM_PAN_EPSILON = 0.28
 const ZOOM_SYNC_DELAY = 180
+const MAX_CANVAS_DPR = 3
 const DEFAULT_ZOOM = { scale: 1, x: 0, y: 0 }
 
 const mapFrame = [
@@ -98,14 +99,6 @@ function transformPoint(marker, zoom) {
       y >= MAP_Y &&
       y <= MAP_Y + MAP_HEIGHT,
   }
-}
-
-function getZoomCssTransform(zoom) {
-  return `translate3d(${(zoom.x / VIEWBOX_WIDTH) * 100}%, ${(zoom.y / VIEWBOX_HEIGHT) * 100}%, 0) scale(${zoom.scale})`
-}
-
-function getMarkerCounterScale(scale) {
-  return 1 / Math.pow(scale, 0.88)
 }
 
 function getViewboxPoint(clientX, clientY, rect) {
@@ -201,23 +194,54 @@ function getCardPlacement(marker) {
   }
 }
 
+function traceRoundedRect(context, x, y, width, height, radius) {
+  const safeRadius = Math.min(radius, width / 2, height / 2)
+
+  context.beginPath()
+  context.moveTo(x + safeRadius, y)
+  context.lineTo(x + width - safeRadius, y)
+  context.quadraticCurveTo(x + width, y, x + width, y + safeRadius)
+  context.lineTo(x + width, y + height - safeRadius)
+  context.quadraticCurveTo(x + width, y + height, x + width - safeRadius, y + height)
+  context.lineTo(x + safeRadius, y + height)
+  context.quadraticCurveTo(x, y + height, x, y + height - safeRadius)
+  context.lineTo(x, y + safeRadius)
+  context.quadraticCurveTo(x, y, x + safeRadius, y)
+  context.closePath()
+}
+
+function getCanvasScale(canvas) {
+  const rect = canvas.getBoundingClientRect()
+  const pixelRatio = Math.min(window.devicePixelRatio || 1, MAX_CANVAS_DPR)
+
+  return {
+    height: rect.height,
+    pixelRatio,
+    scaleX: rect.width / VIEWBOX_WIDTH,
+    scaleY: rect.height / VIEWBOX_HEIGHT,
+    width: rect.width,
+  }
+}
+
 export default function JourneyGlobe({ posts }) {
   const [activeKey, setActiveKey] = useState(null)
   const [zoom, setZoom] = useState(DEFAULT_ZOOM)
   const [isDragging, setIsDragging] = useState(false)
   const applyZoomToDomRef = useRef(null)
+  const canvasRef = useRef(null)
+  const canvasMetricsRef = useRef(null)
   const stageRef = useRef(null)
   const dragRef = useRef(null)
   const hideTimerRef = useRef(null)
   const markerByKeyRef = useRef(new Map())
   const markerSymbolRefs = useRef(new Map())
+  const pathsRef = useRef(null)
   const pinchRef = useRef(null)
   const pointerRefs = useRef(new Map())
   const resetPointerGestureRef = useRef(null)
   const syncTimerRef = useRef(null)
   const setZoomSmoothRef = useRef(null)
   const visualZoomRef = useRef(DEFAULT_ZOOM)
-  const zoomLayerRef = useRef(null)
   const zoomRef = useRef(DEFAULT_ZOOM)
   const zoomFrameRef = useRef(null)
 
@@ -265,11 +289,55 @@ export default function JourneyGlobe({ posts }) {
   const activeCard = activeMarker ? getCardPlacement(activeMarker) : null
   const postCount = markers.reduce((count, marker) => count + marker.posts.length, 0)
 
-  function applyZoomToDom(nextZoom) {
-    if (zoomLayerRef.current) {
-      zoomLayerRef.current.style.transform = getZoomCssTransform(nextZoom)
+  function drawMapToCanvas(nextZoom) {
+    const canvas = canvasRef.current
+    const paths = pathsRef.current
+
+    if (!canvas || !paths) {
+      return
     }
 
+    const context = canvas.getContext('2d')
+    const metrics = canvasMetricsRef.current || getCanvasScale(canvas)
+    const { pixelRatio, scaleX, scaleY } = metrics
+    const lineScale = Math.max(nextZoom.scale, 1)
+
+    context.setTransform(1, 0, 0, 1, 0, 0)
+    context.clearRect(0, 0, canvas.width, canvas.height)
+    context.setTransform(pixelRatio * scaleX, 0, 0, pixelRatio * scaleY, 0, 0)
+    context.save()
+    traceRoundedRect(context, MAP_X, MAP_Y, MAP_WIDTH, MAP_HEIGHT, MAP_RADIUS)
+    context.clip()
+    context.translate(nextZoom.x, nextZoom.y)
+    context.scale(nextZoom.scale, nextZoom.scale)
+
+    context.lineCap = 'round'
+    context.lineJoin = 'round'
+
+    context.strokeStyle = 'rgba(17, 17, 19, 0.04)'
+    context.lineWidth = 0.46 / lineScale
+    context.stroke(paths.graticule)
+
+    const landGradient = context.createLinearGradient(0, MAP_Y, 0, MAP_Y + MAP_HEIGHT)
+    landGradient.addColorStop(0, '#fbfbfc')
+    landGradient.addColorStop(1, '#f0f1f3')
+    context.fillStyle = landGradient
+    context.fill(paths.land)
+
+    context.strokeStyle = 'rgba(17, 17, 19, 0.34)'
+    context.lineWidth = 0.48 / lineScale
+    context.stroke(paths.coastline)
+
+    context.globalAlpha = 0.86
+    context.strokeStyle = 'rgba(17, 17, 19, 0.21)'
+    context.lineWidth = 0.3 / lineScale
+    context.stroke(paths.borders)
+    context.globalAlpha = 1
+
+    context.restore()
+  }
+
+  function positionMarkerNodes(nextZoom) {
     markerSymbolRefs.current.forEach((node, key) => {
       const marker = markerByKeyRef.current.get(key)
 
@@ -277,11 +345,18 @@ export default function JourneyGlobe({ posts }) {
         return
       }
 
-      node.setAttribute(
-        'transform',
-        `translate(${marker.x} ${marker.y}) scale(${getMarkerCounterScale(nextZoom.scale)})`
-      )
+      const visibleMarker = transformPoint(marker, nextZoom)
+
+      node.style.left = `${(visibleMarker.x / VIEWBOX_WIDTH) * 100}%`
+      node.style.top = `${(visibleMarker.y / VIEWBOX_HEIGHT) * 100}%`
+      node.style.opacity = visibleMarker.visible ? '1' : '0'
+      node.style.pointerEvents = visibleMarker.visible ? 'auto' : 'none'
     })
+  }
+
+  function applyZoomToDom(nextZoom) {
+    drawMapToCanvas(nextZoom)
+    positionMarkerNodes(nextZoom)
   }
   applyZoomToDomRef.current = applyZoomToDom
 
@@ -383,6 +458,43 @@ export default function JourneyGlobe({ posts }) {
   )
 
   useEffect(() => {
+    if (typeof Path2D === 'undefined') {
+      return undefined
+    }
+
+    pathsRef.current = {
+      borders: new Path2D(mapPaths.borders),
+      coastline: new Path2D(mapPaths.coastline),
+      graticule: new Path2D(mapPaths.graticule),
+      land: new Path2D(mapPaths.land),
+    }
+
+    const canvas = canvasRef.current
+
+    if (!canvas) {
+      return undefined
+    }
+
+    function resizeCanvas() {
+      const metrics = getCanvasScale(canvas)
+
+      canvasMetricsRef.current = metrics
+      canvas.width = Math.max(1, Math.round(metrics.width * metrics.pixelRatio))
+      canvas.height = Math.max(1, Math.round(metrics.height * metrics.pixelRatio))
+      applyZoomToDomRef.current?.(visualZoomRef.current)
+    }
+
+    resizeCanvas()
+
+    const observer = new ResizeObserver(resizeCanvas)
+    observer.observe(canvas)
+
+    return () => {
+      observer.disconnect()
+    }
+  }, [mapPaths])
+
+  useEffect(() => {
     applyZoomToDomRef.current?.(zoomRef.current)
   }, [markers])
 
@@ -473,6 +585,11 @@ export default function JourneyGlobe({ posts }) {
 
   function showPreview(key) {
     clearHideTimer()
+
+    if (activeKey === key) {
+      return
+    }
+
     flushZoomState()
     setActiveKey(key)
   }
@@ -741,22 +858,17 @@ export default function JourneyGlobe({ posts }) {
           </svg>
 
           <div className="journey-map-viewport">
-            <div
-              className="journey-map-zoom-layer"
-              ref={zoomLayerRef}
-              style={{ transform: getZoomCssTransform(zoom) }}
-            >
-              <svg
-                aria-hidden="true"
-                className="journey-map-world-canvas"
-                viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
-              >
-                <path className="journey-map-graticule" d={mapPaths.graticule} />
-                <path className="journey-map-land" d={mapPaths.land} />
-                <path className="journey-map-coastline" d={mapPaths.coastline} />
-                <path className="journey-map-borders" d={mapPaths.borders} />
-                {markers.map((marker) => (
-                  <a
+            <canvas
+              aria-hidden="true"
+              className="journey-map-world-canvas"
+              ref={canvasRef}
+            />
+            <div className="journey-map-marker-layer">
+              {markers.map((marker) => {
+                const visibleMarker = transformPoint(marker, zoom)
+
+                return (
+                  <Link
                     aria-label={formatPlace(marker.globe)}
                     className={`journey-map-marker-link${
                       marker.key === activeKey ? ' is-active' : ''
@@ -767,26 +879,30 @@ export default function JourneyGlobe({ posts }) {
                     onFocus={() => showPreview(marker.key)}
                     onMouseEnter={() => showPreview(marker.key)}
                     onMouseLeave={scheduleHidePreview}
+                    onMouseMove={() => showPreview(marker.key)}
+                    onPointerEnter={() => showPreview(marker.key)}
+                    prefetch={false}
+                    ref={(node) => {
+                      if (node) {
+                        markerSymbolRefs.current.set(marker.key, node)
+                      } else {
+                        markerSymbolRefs.current.delete(marker.key)
+                      }
+                    }}
+                    style={{
+                      left: `${(visibleMarker.x / VIEWBOX_WIDTH) * 100}%`,
+                      opacity: visibleMarker.visible ? 1 : 0,
+                      pointerEvents: visibleMarker.visible ? 'auto' : 'none',
+                      top: `${(visibleMarker.y / VIEWBOX_HEIGHT) * 100}%`,
+                    }}
                   >
-                    <g
-                      className="journey-map-marker-symbol"
-                      ref={(node) => {
-                        if (node) {
-                          markerSymbolRefs.current.set(marker.key, node)
-                        } else {
-                          markerSymbolRefs.current.delete(marker.key)
-                        }
-                      }}
-                      transform={`translate(${marker.x} ${marker.y}) scale(${getMarkerCounterScale(zoom.scale)})`}
-                    >
-                      <circle className="journey-map-marker-hit" r="17" />
-                      <circle className="journey-map-marker-halo" r="11.5" />
-                      <circle className="journey-map-marker-ring" r="9" />
-                      <circle className="journey-map-marker-core" r="5.2" />
-                    </g>
-                  </a>
-                ))}
-              </svg>
+                    <span className="journey-map-marker-hit" />
+                    <span className="journey-map-marker-halo" />
+                    <span className="journey-map-marker-ring" />
+                    <span className="journey-map-marker-core" />
+                  </Link>
+                )
+              })}
             </div>
           </div>
 
