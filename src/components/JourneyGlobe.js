@@ -14,9 +14,10 @@ const MAP_WIDTH = VIEWBOX_WIDTH - MAP_PADDING * 2
 const MAP_HEIGHT = VIEWBOX_HEIGHT - MAP_PADDING * 2
 const MIN_ZOOM = 1
 const MAX_ZOOM = 5.4
-const WHEEL_SENSITIVITY = 0.0032
-const PINCH_WHEEL_SENSITIVITY = 0.006
-const ZOOM_SYNC_DELAY = 80
+const WHEEL_SENSITIVITY = 0.0026
+const PINCH_WHEEL_SENSITIVITY = 0.0034
+const MAX_WHEEL_DELTA = 92
+const ZOOM_SYNC_DELAY = 180
 const DEFAULT_ZOOM = { scale: 1, x: 0, y: 0 }
 
 const mapFrame = [
@@ -99,13 +100,8 @@ function getZoomTransform(zoom) {
   return `translate(${zoom.x} ${zoom.y}) scale(${zoom.scale})`
 }
 
-function getMarkerStyle(marker) {
-  return {
-    left: `${(marker.x / VIEWBOX_WIDTH) * 100}%`,
-    top: `${(marker.y / VIEWBOX_HEIGHT) * 100}%`,
-    opacity: marker.visible ? '1' : '0',
-    pointerEvents: marker.visible ? 'auto' : 'none',
-  }
+function getMarkerCounterScale(scale) {
+  return 1 / Math.pow(scale, 0.88)
 }
 
 function getViewboxPoint(clientX, clientY, rect) {
@@ -177,13 +173,15 @@ export default function JourneyGlobe({ posts }) {
   const [activeKey, setActiveKey] = useState(null)
   const [zoom, setZoom] = useState(DEFAULT_ZOOM)
   const [isDragging, setIsDragging] = useState(false)
+  const applyZoomToDomRef = useRef(null)
   const stageRef = useRef(null)
   const dragRef = useRef(null)
   const hideTimerRef = useRef(null)
-  const markerNodeRefs = useRef(new Map())
-  const markersRef = useRef([])
+  const markerByKeyRef = useRef(new Map())
+  const markerSymbolRefs = useRef(new Map())
   const pinchRef = useRef(null)
   const pointerRefs = useRef(new Map())
+  const resetPointerGestureRef = useRef(null)
   const syncTimerRef = useRef(null)
   const setZoomSmoothRef = useRef(null)
   const zoomLayerRef = useRef(null)
@@ -223,7 +221,7 @@ export default function JourneyGlobe({ posts }) {
     },
     [posts]
   )
-  markersRef.current = markers
+  markerByKeyRef.current = new Map(markers.map((marker) => [marker.key, marker]))
 
   const visibleMarkers = useMemo(
     () => markers.map((marker) => transformPoint(marker, zoom)),
@@ -237,20 +235,20 @@ export default function JourneyGlobe({ posts }) {
   function applyZoomToDom(nextZoom) {
     zoomLayerRef.current?.setAttribute('transform', getZoomTransform(nextZoom))
 
-    markersRef.current.forEach((marker) => {
-      const node = markerNodeRefs.current.get(marker.key)
+    markerSymbolRefs.current.forEach((node, key) => {
+      const marker = markerByKeyRef.current.get(key)
 
-      if (!node) {
+      if (!marker) {
         return
       }
 
-      const style = getMarkerStyle(transformPoint(marker, nextZoom))
-      node.style.left = style.left
-      node.style.top = style.top
-      node.style.opacity = style.opacity
-      node.style.pointerEvents = style.pointerEvents
+      node.setAttribute(
+        'transform',
+        `translate(${marker.x} ${marker.y}) scale(${getMarkerCounterScale(nextZoom.scale)})`
+      )
     })
   }
+  applyZoomToDomRef.current = applyZoomToDom
 
   function syncZoomStateSoon() {
     if (syncTimerRef.current) {
@@ -281,7 +279,7 @@ export default function JourneyGlobe({ posts }) {
 
     zoomFrameRef.current = requestAnimationFrame(() => {
       zoomFrameRef.current = null
-      applyZoomToDom(zoomRef.current)
+      applyZoomToDomRef.current?.(zoomRef.current)
     })
 
     syncZoomStateSoon()
@@ -302,8 +300,22 @@ export default function JourneyGlobe({ posts }) {
   )
 
   useEffect(() => {
-    applyZoomToDom(zoomRef.current)
+    applyZoomToDomRef.current?.(zoomRef.current)
   }, [markers])
+
+  function resetPointerGesture() {
+    const hadGesture =
+      dragRef.current || pinchRef.current || pointerRefs.current.size > 0
+
+    dragRef.current = null
+    pinchRef.current = null
+    pointerRefs.current.clear()
+
+    if (hadGesture) {
+      setIsDragging(false)
+    }
+  }
+  resetPointerGestureRef.current = resetPointerGesture
 
   useEffect(() => {
     const stage = stageRef.current
@@ -326,11 +338,16 @@ export default function JourneyGlobe({ posts }) {
 
       event.preventDefault()
       event.stopPropagation()
+      resetPointerGestureRef.current?.()
 
       const focusX = ((event.clientX - rect.left) / rect.width) * VIEWBOX_WIDTH
       const focusY = ((event.clientY - rect.top) / rect.height) * VIEWBOX_HEIGHT
       const deltaMultiplier = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? 100 : 1
-      const deltaY = event.deltaY * deltaMultiplier
+      const deltaY = clamp(
+        event.deltaY * deltaMultiplier,
+        -MAX_WHEEL_DELTA,
+        MAX_WHEEL_DELTA
+      )
       const sensitivity = event.ctrlKey ? PINCH_WHEEL_SENSITIVITY : WHEEL_SENSITIVITY
       const current = zoomRef.current
       const nextScale = clamp(
@@ -423,7 +440,9 @@ export default function JourneyGlobe({ posts }) {
   function handlePointerDown(event) {
     if (
       event.button !== 0 ||
-      event.target.closest?.('.journey-globe-marker, .journey-globe-card')
+      event.target.closest?.(
+        '.journey-map-marker-link, .journey-globe-marker, .journey-globe-card'
+      )
     ) {
       return
     }
@@ -628,6 +647,37 @@ export default function JourneyGlobe({ posts }) {
                 <path className="journey-map-land" d={mapPaths.land} />
                 <path className="journey-map-coastline" d={mapPaths.coastline} />
                 <path className="journey-map-borders" d={mapPaths.borders} />
+                {markers.map((marker) => (
+                  <a
+                    aria-label={formatPlace(marker.globe)}
+                    className={`journey-map-marker-link${
+                      marker.key === activeKey ? ' is-active' : ''
+                    }`}
+                    href={`/blog/${marker.posts[0].slug}`}
+                    key={marker.key}
+                    onBlur={scheduleHidePreview}
+                    onFocus={() => showPreview(marker.key)}
+                    onMouseEnter={() => showPreview(marker.key)}
+                    onMouseLeave={scheduleHidePreview}
+                  >
+                    <g
+                      className="journey-map-marker-symbol"
+                      ref={(node) => {
+                        if (node) {
+                          markerSymbolRefs.current.set(marker.key, node)
+                        } else {
+                          markerSymbolRefs.current.delete(marker.key)
+                        }
+                      }}
+                      transform={`translate(${marker.x} ${marker.y}) scale(${getMarkerCounterScale(zoom.scale)})`}
+                    >
+                      <circle className="journey-map-marker-hit" r="17" />
+                      <circle className="journey-map-marker-halo" r="11.5" />
+                      <circle className="journey-map-marker-ring" r="9" />
+                      <circle className="journey-map-marker-core" r="5.2" />
+                    </g>
+                  </a>
+                ))}
               </g>
             </g>
             <rect
@@ -639,37 +689,6 @@ export default function JourneyGlobe({ posts }) {
               y={MAP_Y}
             />
           </svg>
-
-          {visibleMarkers.map((marker) => (
-            <Link
-              className={`journey-globe-marker${
-                marker.key === activeKey ? ' is-active' : ''
-              }`}
-              href={`/blog/${marker.posts[0].slug}`}
-              key={marker.key}
-              onBlur={scheduleHidePreview}
-              onFocus={() => showPreview(marker.key)}
-              onMouseEnter={() => showPreview(marker.key)}
-              onMouseLeave={scheduleHidePreview}
-              prefetch={false}
-              ref={(node) => {
-                if (node) {
-                  markerNodeRefs.current.set(marker.key, node)
-                } else {
-                  markerNodeRefs.current.delete(marker.key)
-                }
-              }}
-              style={{
-                left: `${(marker.x / VIEWBOX_WIDTH) * 100}%`,
-                top: `${(marker.y / VIEWBOX_HEIGHT) * 100}%`,
-                '--marker-scale': 1,
-                '--marker-opacity': marker.visible ? 1 : 0,
-                pointerEvents: marker.visible ? 'auto' : 'none',
-              }}
-            >
-              <span>{formatPlace(marker.globe)}</span>
-            </Link>
-          ))}
 
           {activeMarker && activeCard && (
             <div

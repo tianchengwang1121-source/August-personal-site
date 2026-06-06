@@ -543,6 +543,57 @@ p {
   stroke-width: 1;
 }
 
+.journey-map-marker-link {
+  cursor: pointer;
+  outline: none;
+}
+
+.journey-map-marker-hit {
+  fill: transparent;
+  pointer-events: all;
+}
+
+.journey-map-marker-halo,
+.journey-map-marker-ring,
+.journey-map-marker-core {
+  vector-effect: non-scaling-stroke;
+}
+
+.journey-map-marker-halo {
+  fill: rgba(17, 17, 19, 0.12);
+  opacity: 0.72;
+  transition: opacity 140ms ease;
+}
+
+.journey-map-marker-ring {
+  fill: none;
+  opacity: 0.42;
+  stroke: rgba(17, 17, 19, 0.28);
+  stroke-width: 1.15;
+  transition: opacity 140ms ease;
+}
+
+.journey-map-marker-core {
+  fill: #111113;
+  stroke: rgba(255, 255, 255, 0.98);
+  stroke-width: 2.35;
+  filter:
+    drop-shadow(0 0 0.8px rgba(17, 17, 19, 0.36))
+    drop-shadow(0 5px 13px rgba(17, 17, 19, 0.22));
+}
+
+.journey-map-marker-link:hover .journey-map-marker-halo,
+.journey-map-marker-link:focus .journey-map-marker-halo,
+.journey-map-marker-link.is-active .journey-map-marker-halo {
+  opacity: 0.9;
+}
+
+.journey-map-marker-link:hover .journey-map-marker-ring,
+.journey-map-marker-link:focus .journey-map-marker-ring,
+.journey-map-marker-link.is-active .journey-map-marker-ring {
+  opacity: 0.95;
+}
+
 .journey-globe-marker {
   position: absolute;
   z-index: 2;
