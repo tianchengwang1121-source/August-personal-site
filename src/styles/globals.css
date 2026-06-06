@@ -420,15 +420,16 @@ p {
   position: relative;
   overflow: hidden;
   margin-bottom: 18px;
-  padding: clamp(22px, 4vw, 34px);
+  padding: clamp(18px, 3.4vw, 30px);
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
   background:
-    radial-gradient(circle at 50% 48%, rgba(17, 17, 19, 0.055), transparent 30%),
+    radial-gradient(circle at 70% 42%, rgba(17, 17, 19, 0.052), transparent 28%),
+    radial-gradient(circle at 32% 55%, rgba(17, 17, 19, 0.032), transparent 34%),
     linear-gradient(90deg, rgba(17, 17, 19, 0.026) 1px, transparent 1px),
     linear-gradient(180deg, rgba(17, 17, 19, 0.026) 1px, transparent 1px),
     rgba(255, 255, 255, 0.88);
-  background-size: auto, 44px 44px, 44px 44px, auto;
+  background-size: auto, auto, 44px 44px, 44px 44px, auto;
   box-shadow: var(--shadow);
 }
 
@@ -447,70 +448,80 @@ p {
 
 .journey-globe-stage {
   position: relative;
-  width: min(100%, 680px);
+  width: min(100%, 980px);
   margin: 0 auto;
-  aspect-ratio: 1;
+  aspect-ratio: 1.846 / 1;
+  cursor: grab;
+  overscroll-behavior: contain;
+  touch-action: none;
 }
 
-.journey-globe-sphere {
+.journey-globe-stage.is-dragging {
+  cursor: grabbing;
+}
+
+.journey-map-drift {
   position: absolute;
   inset: 0;
-  filter: drop-shadow(0 24px 50px rgba(17, 17, 19, 0.13));
+  filter: drop-shadow(0 22px 40px rgba(17, 17, 19, 0.09));
   transform-origin: 50% 50%;
-  transition: transform 220ms ease;
+  animation: journey-map-drift 18s ease-in-out infinite alternate;
+  transition:
+    filter 220ms ease,
+    transform 220ms ease;
 }
 
-.journey-globe-sphere.is-previewing {
-  transform: scale(1.018);
+.journey-map-drift.is-previewing {
+  filter: drop-shadow(0 26px 46px rgba(17, 17, 19, 0.12));
 }
 
-.journey-globe-sphere svg {
+.journey-map-canvas {
   display: block;
   width: 100%;
   height: 100%;
+  user-select: none;
 }
 
-.journey-globe-shadow {
-  fill: rgba(17, 17, 19, 0.03);
+.journey-map-surface {
+  fill: url('#journeyMapSurface');
+  filter: url('#journeyMapLift');
 }
 
-.journey-globe-grid-line {
+.journey-map-dotfield {
+  fill: url('#journeyMapDots');
+  opacity: 0.7;
+}
+
+.journey-map-graticule {
   fill: none;
-  stroke: rgba(17, 17, 19, 0.095);
-  stroke-width: 1;
+  stroke: rgba(17, 17, 19, 0.055);
+  stroke-width: 0.7;
 }
 
-.journey-globe-grid-line--lng {
-  stroke: rgba(17, 17, 19, 0.072);
-}
-
-.journey-globe-land {
-  fill: rgba(255, 255, 255, 0.46);
-  stroke: rgba(17, 17, 19, 0.16);
+.journey-map-land {
+  fill: url('#journeyMapLand');
+  stroke: rgba(17, 17, 19, 0.22);
   stroke-linejoin: round;
-  stroke-width: 1.25;
-  filter: drop-shadow(0 5px 8px rgba(17, 17, 19, 0.1));
+  stroke-width: 0.9;
 }
 
-.journey-globe-land--africa,
-.journey-globe-land--australia,
-.journey-globe-land--india,
-.journey-globe-land--southeast-asia {
-  fill: rgba(255, 255, 255, 0.36);
-  stroke: rgba(17, 17, 19, 0.145);
-}
-
-.journey-globe-land--japan,
-.journey-globe-land--taiwan,
-.journey-globe-land--indonesia {
-  fill: rgba(255, 255, 255, 0.4);
-  stroke-width: 1;
-}
-
-.journey-globe-rim {
+.journey-map-borders {
   fill: none;
+  opacity: 0.62;
   stroke: rgba(17, 17, 19, 0.13);
-  stroke-width: 1.4;
+  stroke-linejoin: round;
+  stroke-width: 0.46;
+}
+
+.journey-map-zoom-layer {
+  transform-box: fill-box;
+  transform-origin: 0 0;
+}
+
+.journey-map-outline {
+  fill: none;
+  stroke: rgba(17, 17, 19, 0.12);
+  stroke-width: 1.1;
 }
 
 .journey-globe-marker {
@@ -520,7 +531,11 @@ p {
   height: 16px;
   border-radius: 999px;
   color: var(--text);
+  opacity: var(--marker-opacity, 1);
   transform: translate(-50%, -50%) scale(var(--marker-scale));
+  transition:
+    opacity 140ms ease,
+    transform 160ms ease;
 }
 
 .journey-globe-marker::before,
@@ -535,9 +550,11 @@ p {
 .journey-globe-marker::before {
   width: 8px;
   height: 8px;
-  border: 2px solid rgba(255, 255, 255, 0.88);
+  border: 2px solid rgba(255, 255, 255, 0.94);
   background: #111113;
-  box-shadow: 0 5px 16px rgba(17, 17, 19, 0.2);
+  box-shadow:
+    0 0 0 1px rgba(17, 17, 19, 0.1),
+    0 5px 16px rgba(17, 17, 19, 0.2);
 }
 
 .journey-globe-marker::after {
@@ -570,7 +587,7 @@ p {
   position: absolute;
   pointer-events: auto;
   z-index: 3;
-  width: min(190px, 42vw);
+  width: min(210px, 44vw);
   padding: 12px 13px;
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -581,6 +598,10 @@ p {
   box-shadow: 0 16px 38px rgba(17, 17, 19, 0.12);
   transform: translate(var(--card-x), var(--card-y));
   animation: globe-card-enter 160ms ease both;
+}
+
+.journey-globe-card--stacked {
+  width: min(232px, 46vw);
 }
 
 .journey-globe-card::after {
@@ -628,16 +649,43 @@ p {
   letter-spacing: 0.08em;
 }
 
+.journey-globe-card-list {
+  display: grid;
+  gap: 4px;
+  margin-top: 7px;
+}
+
+.journey-globe-card-item {
+  display: block;
+  margin: 0 -4px;
+  padding: 7px 4px;
+  border-radius: 8px;
+  color: inherit;
+  transition:
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.journey-globe-card-item + .journey-globe-card-item {
+  border-top: 1px solid rgba(17, 17, 19, 0.08);
+}
+
+.journey-globe-card-item:hover,
+.journey-globe-card-item:focus-visible {
+  background: rgba(17, 17, 19, 0.035);
+  outline: none;
+  transform: translateX(2px);
+}
+
 .journey-globe-card strong {
   display: block;
-  margin-top: 5px;
   color: var(--text);
   font-size: 0.94rem;
   line-height: 1.2;
 }
 
 .journey-globe-card p {
-  margin-top: 6px;
+  margin-top: 5px;
   color: #4c5057;
   font-size: 0.72rem;
   font-weight: 600;
@@ -2274,6 +2322,15 @@ p {
   }
 }
 
+@keyframes journey-map-drift {
+  from {
+    transform: translate3d(-2px, 1px, 0) scale(1);
+  }
+  to {
+    transform: translate3d(2px, -1px, 0) scale(1.006);
+  }
+}
+
 @keyframes art-breathe {
   0%,
   100% {
@@ -2420,7 +2477,7 @@ p {
   }
 
   .journey-globe-stage {
-    width: min(100%, 420px);
+    width: 100%;
   }
 
   .journey-globe-card {
