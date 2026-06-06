@@ -17,6 +17,10 @@ const MAX_ZOOM = 5.4
 const WHEEL_SENSITIVITY = 0.0026
 const PINCH_WHEEL_SENSITIVITY = 0.0034
 const MAX_WHEEL_DELTA = 92
+const TRACKPAD_SCROLL_DELTA = 82
+const ZOOM_EASE = 0.26
+const ZOOM_SCALE_EPSILON = 0.0025
+const ZOOM_PAN_EPSILON = 0.18
 const ZOOM_SYNC_DELAY = 180
 const DEFAULT_ZOOM = { scale: 1, x: 0, y: 0 }
 
@@ -115,6 +119,34 @@ function getPointerDistance(first, second) {
   return Math.hypot(first.clientX - second.clientX, first.clientY - second.clientY)
 }
 
+function getWheelDelta(event) {
+  const deltaMultiplier = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? 100 : 1
+
+  return {
+    x: event.deltaX * deltaMultiplier,
+    y: event.deltaY * deltaMultiplier,
+  }
+}
+
+function shouldWheelZoom(event, delta) {
+  if (event.ctrlKey) {
+    return true
+  }
+
+  if (event.deltaMode !== 0) {
+    return true
+  }
+
+  const absX = Math.abs(delta.x)
+  const absY = Math.abs(delta.y)
+
+  if (absX > 0 || absY < TRACKPAD_SCROLL_DELTA || !Number.isInteger(event.deltaY)) {
+    return false
+  }
+
+  return true
+}
+
 function getPinchMetrics(pointers, rect) {
   const [first, second] = Array.from(pointers.values())
 
@@ -184,6 +216,7 @@ export default function JourneyGlobe({ posts }) {
   const resetPointerGestureRef = useRef(null)
   const syncTimerRef = useRef(null)
   const setZoomSmoothRef = useRef(null)
+  const visualZoomRef = useRef(DEFAULT_ZOOM)
   const zoomLayerRef = useRef(null)
   const zoomRef = useRef(DEFAULT_ZOOM)
   const zoomFrameRef = useRef(null)
@@ -261,7 +294,26 @@ export default function JourneyGlobe({ posts }) {
     }, ZOOM_SYNC_DELAY)
   }
 
+  function cancelZoomFrame() {
+    if (zoomFrameRef.current) {
+      cancelAnimationFrame(zoomFrameRef.current)
+      zoomFrameRef.current = null
+    }
+  }
+
+  function applyZoomImmediately(nextZoom) {
+    cancelZoomFrame()
+    zoomRef.current = nextZoom
+    visualZoomRef.current = nextZoom
+    applyZoomToDomRef.current?.(nextZoom)
+    syncZoomStateSoon()
+  }
+
   function flushZoomState() {
+    cancelZoomFrame()
+    visualZoomRef.current = zoomRef.current
+    applyZoomToDomRef.current?.(zoomRef.current)
+
     if (syncTimerRef.current) {
       clearTimeout(syncTimerRef.current)
       syncTimerRef.current = null
@@ -270,27 +322,53 @@ export default function JourneyGlobe({ posts }) {
     setZoom(zoomRef.current)
   }
 
-  function setZoomSmooth(nextZoom) {
+  function animateZoomToTarget() {
+    zoomFrameRef.current = requestAnimationFrame(() => {
+      const current = visualZoomRef.current
+      const target = zoomRef.current
+      const nextZoom = {
+        scale: current.scale + (target.scale - current.scale) * ZOOM_EASE,
+        x: current.x + (target.x - current.x) * ZOOM_EASE,
+        y: current.y + (target.y - current.y) * ZOOM_EASE,
+      }
+      const isSettled =
+        Math.abs(nextZoom.scale - target.scale) < ZOOM_SCALE_EPSILON &&
+        Math.abs(nextZoom.x - target.x) < ZOOM_PAN_EPSILON &&
+        Math.abs(nextZoom.y - target.y) < ZOOM_PAN_EPSILON
+      const visualZoom = isSettled ? target : nextZoom
+
+      visualZoomRef.current = visualZoom
+      applyZoomToDomRef.current?.(visualZoom)
+
+      if (isSettled) {
+        zoomFrameRef.current = null
+        syncZoomStateSoon()
+        return
+      }
+
+      animateZoomToTarget()
+    })
+  }
+
+  function setZoomSmooth(nextZoom, options = {}) {
     zoomRef.current = nextZoom
+
+    if (options.immediate) {
+      applyZoomImmediately(nextZoom)
+      return
+    }
 
     if (zoomFrameRef.current) {
       return
     }
 
-    zoomFrameRef.current = requestAnimationFrame(() => {
-      zoomFrameRef.current = null
-      applyZoomToDomRef.current?.(zoomRef.current)
-    })
-
-    syncZoomStateSoon()
+    animateZoomToTarget()
   }
   setZoomSmoothRef.current = setZoomSmooth
 
   useEffect(
     () => () => {
-      if (zoomFrameRef.current) {
-        cancelAnimationFrame(zoomFrameRef.current)
-      }
+      cancelZoomFrame()
 
       if (syncTimerRef.current) {
         clearTimeout(syncTimerRef.current)
@@ -336,15 +414,20 @@ export default function JourneyGlobe({ posts }) {
         return
       }
 
+      const delta = getWheelDelta(event)
+
+      if (!shouldWheelZoom(event, delta)) {
+        return
+      }
+
       event.preventDefault()
       event.stopPropagation()
       resetPointerGestureRef.current?.()
 
       const focusX = ((event.clientX - rect.left) / rect.width) * VIEWBOX_WIDTH
       const focusY = ((event.clientY - rect.top) / rect.height) * VIEWBOX_HEIGHT
-      const deltaMultiplier = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? 100 : 1
       const deltaY = clamp(
-        event.deltaY * deltaMultiplier,
+        delta.y,
         -MAX_WHEEL_DELTA,
         MAX_WHEEL_DELTA
       )
@@ -450,6 +533,7 @@ export default function JourneyGlobe({ posts }) {
     event.preventDefault()
     clearHideTimer()
     setActiveKey(null)
+    flushZoomState()
     pointerRefs.current.set(event.pointerId, {
       clientX: event.clientX,
       clientY: event.clientY,
@@ -509,7 +593,8 @@ export default function JourneyGlobe({ posts }) {
           scale: nextScale,
           x: focus.x - (focus.x - current.x) * ratio,
           y: focus.y - (focus.y - current.y) * ratio,
-        })
+        }),
+        { immediate: true }
       )
 
       return
@@ -533,7 +618,8 @@ export default function JourneyGlobe({ posts }) {
         scale: drag.zoom.scale,
         x: drag.zoom.x + deltaX,
         y: drag.zoom.y + deltaY,
-      })
+      }),
+      { immediate: true }
     )
   }
 
