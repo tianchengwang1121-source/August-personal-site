@@ -6,14 +6,15 @@ import worldAtlas from 'world-atlas/countries-10m.json'
 
 const VIEWBOX_WIDTH = 960
 const VIEWBOX_HEIGHT = 520
-const MAP_PADDING = 14
-const MAP_RADIUS = 28
+const MAP_PADDING = 6
+const MAP_RADIUS = 24
 const MAP_X = MAP_PADDING
 const MAP_Y = MAP_PADDING
 const MAP_WIDTH = VIEWBOX_WIDTH - MAP_PADDING * 2
 const MAP_HEIGHT = VIEWBOX_HEIGHT - MAP_PADDING * 2
 const MIN_ZOOM = 1
-const MAX_ZOOM = 4.2
+const MAX_ZOOM = 5.4
+const WHEEL_SENSITIVITY = 0.0022
 const DEFAULT_ZOOM = { scale: 1, x: 0, y: 0 }
 
 const mapFrame = [
@@ -25,6 +26,7 @@ const mapProjection = geoEquirectangular().fitExtent(mapFrame, { type: 'Sphere' 
 const mapPath = geoPath(mapProjection)
 const graticule = geoGraticule().step([20, 20])
 const landFeature = feature(worldAtlas, worldAtlas.objects.land)
+const coastlineMesh = mesh(worldAtlas, worldAtlas.objects.land)
 const countryMesh = mesh(
   worldAtlas,
   worldAtlas.objects.countries,
@@ -135,11 +137,14 @@ export default function JourneyGlobe({ posts }) {
   const stageRef = useRef(null)
   const dragRef = useRef(null)
   const hideTimerRef = useRef(null)
+  const zoomRef = useRef(DEFAULT_ZOOM)
+  const zoomFrameRef = useRef(null)
 
   const mapPaths = useMemo(
     () => ({
       graticule: mapPath(graticule()),
       land: mapPath(landFeature),
+      coastline: mapPath(coastlineMesh),
       borders: mapPath(countryMesh),
     }),
     []
@@ -178,6 +183,28 @@ export default function JourneyGlobe({ posts }) {
   const activeCard = activeMarker ? getCardPlacement(activeMarker) : null
   const postCount = markers.reduce((count, marker) => count + marker.posts.length, 0)
 
+  function setZoomSmooth(nextZoom) {
+    zoomRef.current = nextZoom
+
+    if (zoomFrameRef.current) {
+      return
+    }
+
+    zoomFrameRef.current = requestAnimationFrame(() => {
+      zoomFrameRef.current = null
+      setZoom(zoomRef.current)
+    })
+  }
+
+  useEffect(
+    () => () => {
+      if (zoomFrameRef.current) {
+        cancelAnimationFrame(zoomFrameRef.current)
+      }
+    },
+    []
+  )
+
   useEffect(() => {
     const stage = stageRef.current
 
@@ -202,21 +229,23 @@ export default function JourneyGlobe({ posts }) {
 
       const focusX = ((event.clientX - rect.left) / rect.width) * VIEWBOX_WIDTH
       const focusY = ((event.clientY - rect.top) / rect.height) * VIEWBOX_HEIGHT
+      const deltaMultiplier = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? 100 : 1
+      const deltaY = event.deltaY * deltaMultiplier
+      const current = zoomRef.current
+      const nextScale = clamp(
+        current.scale * Math.exp(-deltaY * WHEEL_SENSITIVITY),
+        MIN_ZOOM,
+        MAX_ZOOM
+      )
+      const ratio = nextScale / current.scale
 
-      setZoom((current) => {
-        const nextScale = clamp(
-          current.scale * Math.exp(-event.deltaY * 0.00135),
-          MIN_ZOOM,
-          MAX_ZOOM
-        )
-        const ratio = nextScale / current.scale
-
-        return clampZoomTransform({
+      setZoomSmooth(
+        clampZoomTransform({
           scale: nextScale,
           x: focusX - (focusX - current.x) * ratio,
           y: focusY - (focusY - current.y) * ratio,
         })
-      })
+      )
     }
 
     document.addEventListener('wheel', handleStageWheel, {
@@ -286,7 +315,7 @@ export default function JourneyGlobe({ posts }) {
       startClientY: event.clientY,
       rectHeight: rect.height,
       rectWidth: rect.width,
-      zoom,
+      zoom: zoomRef.current,
     }
 
     event.currentTarget.setPointerCapture?.(event.pointerId)
@@ -307,7 +336,7 @@ export default function JourneyGlobe({ posts }) {
     const deltaY =
       ((event.clientY - drag.startClientY) / drag.rectHeight) * VIEWBOX_HEIGHT
 
-    setZoom(
+    setZoomSmooth(
       clampZoomTransform({
         scale: drag.zoom.scale,
         x: drag.zoom.x + deltaX,
@@ -404,6 +433,7 @@ export default function JourneyGlobe({ posts }) {
               >
                 <path className="journey-map-graticule" d={mapPaths.graticule} />
                 <path className="journey-map-land" d={mapPaths.land} />
+                <path className="journey-map-coastline" d={mapPaths.coastline} />
                 <path className="journey-map-borders" d={mapPaths.borders} />
               </g>
             </g>

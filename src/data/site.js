@@ -39,8 +39,8 @@ export const blogPosts = [
     globe: {
       city: 'Beijing',
       region: 'China',
-      lat: 39.9042,
-      lng: 116.4074,
+      lat: 40.0801,
+      lng: 116.5846,
     },
   },
   {
@@ -74,8 +74,8 @@ export const blogPosts = [
     globe: {
       city: 'Singapore',
       region: 'Singapore',
-      lat: 1.3521,
-      lng: 103.8198,
+      lat: 1.3616,
+      lng: 103.9891,
     },
     content: [
       {

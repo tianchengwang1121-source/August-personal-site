@@ -420,7 +420,7 @@ p {
   position: relative;
   overflow: hidden;
   margin-bottom: 18px;
-  padding: clamp(18px, 3.4vw, 30px);
+  padding: clamp(14px, 2.5vw, 22px);
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
   background:
@@ -438,17 +438,26 @@ p {
   align-items: flex-end;
   justify-content: space-between;
   gap: 18px;
-  margin-bottom: 8px;
+  margin-bottom: 2px;
+}
+
+.journey-globe-heading .eyebrow {
+  color: rgba(108, 113, 122, 0.74);
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
 }
 
 .journey-globe-heading h2 {
-  margin-top: 7px;
-  font-size: clamp(1.45rem, 2.4vw, 2.1rem);
+  margin-top: 4px;
+  color: #6f747d;
+  font-size: clamp(0.98rem, 1.35vw, 1.18rem);
+  font-weight: 720;
+  letter-spacing: 0;
 }
 
 .journey-globe-stage {
   position: relative;
-  width: min(100%, 980px);
+  width: min(100%, 1040px);
   margin: 0 auto;
   aspect-ratio: 1.846 / 1;
   cursor: grab;
@@ -494,23 +503,33 @@ p {
 
 .journey-map-graticule {
   fill: none;
-  stroke: rgba(17, 17, 19, 0.055);
-  stroke-width: 0.7;
+  stroke: rgba(17, 17, 19, 0.04);
+  stroke-width: 0.46;
+  vector-effect: non-scaling-stroke;
 }
 
 .journey-map-land {
   fill: url('#journeyMapLand');
-  stroke: rgba(17, 17, 19, 0.22);
+  stroke: none;
+}
+
+.journey-map-coastline {
+  fill: none;
+  stroke: rgba(17, 17, 19, 0.34);
+  stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-width: 0.9;
+  stroke-width: 0.48;
+  vector-effect: non-scaling-stroke;
 }
 
 .journey-map-borders {
   fill: none;
-  opacity: 0.62;
-  stroke: rgba(17, 17, 19, 0.13);
+  opacity: 0.86;
+  stroke: rgba(17, 17, 19, 0.21);
+  stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-width: 0.46;
+  stroke-width: 0.3;
+  vector-effect: non-scaling-stroke;
 }
 
 .journey-map-zoom-layer {
@@ -521,7 +540,7 @@ p {
 .journey-map-outline {
   fill: none;
   stroke: rgba(17, 17, 19, 0.12);
-  stroke-width: 1.1;
+  stroke-width: 1;
 }
 
 .journey-globe-marker {
@@ -693,10 +712,10 @@ p {
 }
 
 .journey-globe-hint {
-  margin: -4px 0 0;
-  color: var(--subtle);
-  font-size: 0.76rem;
-  font-weight: 620;
+  margin: -6px 0 0;
+  color: rgba(154, 158, 166, 0.82);
+  font-size: 0.68rem;
+  font-weight: 580;
   text-align: center;
 }
 
