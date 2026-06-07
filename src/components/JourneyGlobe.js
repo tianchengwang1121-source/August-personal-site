@@ -133,12 +133,17 @@ function shouldWheelZoom(event, delta) {
 
   const absX = Math.abs(delta.x)
   const wheelDelta = Math.abs(event.wheelDelta || event.webkitWheelDelta || 0)
+  const absDeltaY = Math.abs(event.deltaY)
 
-  if (absX > 0 || !wheelDelta) {
+  if (absX > 0) {
     return false
   }
 
-  return wheelDelta % 120 === 0
+  if (wheelDelta) {
+    return wheelDelta % 120 === 0 || absDeltaY >= 40
+  }
+
+  return Number.isInteger(event.deltaY) && absDeltaY >= 40
 }
 
 function getPinchMetrics(pointers, rect) {
@@ -210,6 +215,7 @@ export default function JourneyGlobe({ posts }) {
   const stageRef = useRef(null)
   const dragRef = useRef(null)
   const hideTimerRef = useRef(null)
+  const markerPointerTypeRef = useRef(null)
   const markerByKeyRef = useRef(new Map())
   const markerSymbolRefs = useRef(new Map())
   const pinchRef = useRef(null)
@@ -593,6 +599,17 @@ export default function JourneyGlobe({ posts }) {
 
   function openMarkerPost(event, marker) {
     event.preventDefault()
+
+    const isTouchMarker =
+      markerPointerTypeRef.current === 'touch' ||
+      (typeof window !== 'undefined' &&
+        window.matchMedia?.('(hover: none), (pointer: coarse)').matches)
+
+    if (isTouchMarker) {
+      showPreview(marker.key)
+      return
+    }
+
     router.push(`/blog/${marker.posts[0].slug}`)
   }
 
@@ -653,10 +670,6 @@ export default function JourneyGlobe({ posts }) {
   }
 
   function handlePointerDown(event) {
-    if (event.pointerType === 'touch' && zoomRef.current.scale <= MIN_ZOOM) {
-      return
-    }
-
     if (
       event.button !== 0 ||
       event.target.closest?.(
@@ -677,6 +690,11 @@ export default function JourneyGlobe({ posts }) {
     event.currentTarget.setPointerCapture?.(event.pointerId)
 
     if (pointerRefs.current.size >= 2 && startPinch(event)) {
+      event.preventDefault()
+      return
+    }
+
+    if (event.pointerType === 'touch' && zoomRef.current.scale <= MIN_ZOOM) {
       return
     }
 
@@ -881,6 +899,9 @@ export default function JourneyGlobe({ posts }) {
                         onMouseEnter={() => showPreview(marker.key)}
                         onMouseLeave={scheduleHidePreview}
                         onMouseMove={() => showPreview(marker.key)}
+                        onPointerDown={(event) => {
+                          markerPointerTypeRef.current = event.pointerType
+                        }}
                         onPointerEnter={() => showPreview(marker.key)}
                         ref={(node) => {
                           if (node) {

@@ -459,7 +459,7 @@ p {
   width: min(98%, 1080px);
   margin: 0 auto;
   aspect-ratio: 2 / 1;
-  background: linear-gradient(180deg, #f8f9fa 0%, #f1f2f4 100%);
+  background: transparent;
   border-radius: var(--radius-md);
   box-shadow:
     0 24px 46px rgba(17, 17, 19, 0.075),
@@ -511,7 +511,7 @@ p {
 }
 
 .journey-map-surface {
-  fill: transparent;
+  fill: url('#journeyMapSurface');
 }
 
 .journey-map-dotfield {
@@ -2600,7 +2600,7 @@ p {
   .journey-globe-stage {
     width: max(860px, 224vw);
     max-width: none;
-    touch-action: pan-x;
+    touch-action: none;
   }
 
   .journey-map-drift {
