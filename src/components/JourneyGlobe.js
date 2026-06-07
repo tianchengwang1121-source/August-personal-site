@@ -7,7 +7,7 @@ import worldAtlas from 'world-atlas/countries-10m.json'
 
 const VIEWBOX_WIDTH = 960
 const VIEWBOX_HEIGHT = 520
-const MAP_PADDING = 6
+const MAP_PADDING = 18
 const MAP_RADIUS = 24
 const MAP_X = MAP_PADDING
 const MAP_Y = MAP_PADDING
@@ -241,6 +241,7 @@ export default function JourneyGlobe({ posts }) {
   const canvasRef = useRef(null)
   const canvasMetricsRef = useRef(null)
   const canvasRenderedZoomRef = useRef(DEFAULT_ZOOM)
+  const stageShellRef = useRef(null)
   const stageRef = useRef(null)
   const dragRef = useRef(null)
   const hideTimerRef = useRef(null)
@@ -249,6 +250,8 @@ export default function JourneyGlobe({ posts }) {
   const pathsRef = useRef(null)
   const pinchRef = useRef(null)
   const pointerRefs = useRef(new Map())
+  const pageScrollLockRef = useRef(null)
+  const handleMapWheelRef = useRef(null)
   const redrawTimerRef = useRef(null)
   const resetPointerGestureRef = useRef(null)
   const syncTimerRef = useRef(null)
@@ -300,9 +303,12 @@ export default function JourneyGlobe({ posts }) {
     [markers, zoom]
   )
 
-  const activeMarker = visibleMarkers.find((marker) => marker.key === activeKey)
+  const activeSourceMarker = activeKey ? markerByKeyRef.current.get(activeKey) : null
+  const activeMarker = activeSourceMarker
+    ? transformPoint(activeSourceMarker, zoomRef.current)
+    : null
   const activeCard = activeMarker ? getCardPlacement(activeMarker) : null
-  const postCount = markers.reduce((count, marker) => count + marker.posts.length, 0)
+  const placeCountLabel = `${markers.length} ${markers.length === 1 ? 'PLACE' : 'PLACES'}`
 
   function drawMapToCanvas(nextZoom) {
     const canvas = canvasRef.current
@@ -329,30 +335,30 @@ export default function JourneyGlobe({ posts }) {
     context.lineCap = 'round'
     context.lineJoin = 'round'
 
-    context.strokeStyle = 'rgba(17, 17, 19, 0.04)'
-    context.lineWidth = 0.46 / lineScale
+    context.strokeStyle = 'rgba(17, 17, 19, 0.026)'
+    context.lineWidth = 0.32 / lineScale
     context.stroke(paths.graticule)
 
     const landGradient = context.createLinearGradient(0, MAP_Y, 0, MAP_Y + MAP_HEIGHT)
-    landGradient.addColorStop(0, '#fbfbfc')
-    landGradient.addColorStop(1, '#f0f1f3')
+    landGradient.addColorStop(0, '#f8f9fa')
+    landGradient.addColorStop(1, '#f1f2f4')
     context.fillStyle = landGradient
     context.fill(paths.land)
 
-    context.strokeStyle = 'rgba(17, 17, 19, 0.34)'
-    context.lineWidth = 0.48 / lineScale
+    context.strokeStyle = 'rgba(17, 17, 19, 0.24)'
+    context.lineWidth = 0.62 / lineScale
     context.stroke(paths.coastline)
 
-    context.globalAlpha = 0.86
-    context.strokeStyle = 'rgba(17, 17, 19, 0.21)'
-    context.lineWidth = 0.3 / lineScale
+    context.globalAlpha = 0.9
+    context.strokeStyle = 'rgba(17, 17, 19, 0.18)'
+    context.lineWidth = 0.4 / lineScale
     context.stroke(paths.borders)
     context.globalAlpha = 1
 
     if (nextZoom.scale >= 1.45) {
-      context.globalAlpha = 0.74
-      context.strokeStyle = 'rgba(17, 17, 19, 0.21)'
-      context.lineWidth = 0.3 / lineScale
+      context.globalAlpha = 0.68
+      context.strokeStyle = 'rgba(17, 17, 19, 0.18)'
+      context.lineWidth = 0.36 / lineScale
       context.stroke(paths.chinaProvinces)
       context.globalAlpha = 1
     }
@@ -432,6 +438,27 @@ export default function JourneyGlobe({ posts }) {
       clearTimeout(redrawTimerRef.current)
       redrawTimerRef.current = null
     }
+  }
+
+  function lockPageScrollForWheel() {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    const scrollX = window.scrollX
+    const scrollY = window.scrollY
+
+    if (pageScrollLockRef.current) {
+      cancelAnimationFrame(pageScrollLockRef.current)
+    }
+
+    pageScrollLockRef.current = requestAnimationFrame(() => {
+      pageScrollLockRef.current = null
+
+      if (window.scrollX !== scrollX || window.scrollY !== scrollY) {
+        window.scrollTo(scrollX, scrollY)
+      }
+    })
   }
 
   function scheduleCrispRedraw() {
@@ -518,6 +545,10 @@ export default function JourneyGlobe({ posts }) {
       cancelZoomFrame()
       clearRedrawTimer()
 
+      if (pageScrollLockRef.current) {
+        cancelAnimationFrame(pageScrollLockRef.current)
+      }
+
       if (syncTimerRef.current) {
         clearTimeout(syncTimerRef.current)
       }
@@ -568,6 +599,36 @@ export default function JourneyGlobe({ posts }) {
     applyZoomToDomRef.current?.(zoomRef.current, { render: true })
   }, [markers])
 
+  useEffect(() => {
+    const shell = stageShellRef.current
+
+    if (!shell) {
+      return undefined
+    }
+
+    function syncMobileScrollPosition() {
+      const isMobile = window.matchMedia('(max-width: 720px)').matches
+
+      if (!isMobile) {
+        shell.scrollLeft = 0
+        shell.dataset.journeyMapMobileScroll = ''
+        return
+      }
+
+      if (!shell.dataset.journeyMapMobileScroll) {
+        shell.scrollLeft = Math.max(0, (shell.scrollWidth - shell.clientWidth) * 0.56)
+        shell.dataset.journeyMapMobileScroll = 'set'
+      }
+    }
+
+    syncMobileScrollPosition()
+    window.addEventListener('resize', syncMobileScrollPosition)
+
+    return () => {
+      window.removeEventListener('resize', syncMobileScrollPosition)
+    }
+  }, [])
+
   function resetPointerGesture() {
     const hadGesture =
       dragRef.current || pinchRef.current || pointerRefs.current.size > 0
@@ -602,13 +663,14 @@ export default function JourneyGlobe({ posts }) {
 
     const delta = getWheelDelta(event)
 
-    event.preventDefault()
-    event.stopPropagation()
-    event.stopImmediatePropagation?.()
-
     if (!shouldWheelZoom(event, delta)) {
       return
     }
+
+    event.preventDefault()
+    event.stopPropagation()
+    event.stopImmediatePropagation?.()
+    lockPageScrollForWheel()
 
     resetPointerGestureRef.current?.()
 
@@ -636,6 +698,7 @@ export default function JourneyGlobe({ posts }) {
       })
     )
   }
+  handleMapWheelRef.current = handleMapWheel
 
   useEffect(() => {
     const stage = stageRef.current
@@ -644,13 +707,17 @@ export default function JourneyGlobe({ posts }) {
       return undefined
     }
 
-    document.addEventListener('wheel', handleMapWheel, {
+    function handleDocumentWheel(event) {
+      handleMapWheelRef.current?.(event)
+    }
+
+    document.addEventListener('wheel', handleDocumentWheel, {
       capture: true,
       passive: false,
     })
 
     return () => {
-      document.removeEventListener('wheel', handleMapWheel, true)
+      document.removeEventListener('wheel', handleDocumentWheel, true)
     }
   }, [])
 
@@ -721,6 +788,10 @@ export default function JourneyGlobe({ posts }) {
   }
 
   function handlePointerDown(event) {
+    if (event.pointerType === 'touch' && zoomRef.current.scale <= MIN_ZOOM) {
+      return
+    }
+
     if (
       event.button !== 0 ||
       event.target.closest?.(
@@ -850,173 +921,178 @@ export default function JourneyGlobe({ posts }) {
   return (
     <section className="journey-globe" aria-label="Journey map">
       <div className="journey-globe-heading">
-        <p className="eyebrow">Journey map</p>
-        <h2>Places recorded</h2>
+        <span>JOURNEY MAP</span>
+        <span>{placeCountLabel}</span>
       </div>
 
       <div
-        className={`journey-globe-stage${isDragging ? ' is-dragging' : ''}`}
-        onMouseLeave={handleStageLeave}
-        onPointerCancel={handlePointerEnd}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerEnd}
-        ref={stageRef}
+        className="journey-globe-stage-shell"
+        ref={stageShellRef}
       >
         <div
-          className={`journey-map-drift${activeMarker ? ' is-previewing' : ''}`}
+          className={`journey-globe-stage${isDragging ? ' is-dragging' : ''}`}
+          onMouseLeave={handleStageLeave}
+          onPointerCancel={handlePointerEnd}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerEnd}
+          ref={stageRef}
         >
-          <svg
-            aria-hidden="true"
-            className="journey-map-canvas"
-            role="img"
-            viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
+          <div
+            className={`journey-map-drift${activeMarker ? ' is-previewing' : ''}`}
           >
-            <defs>
-              <linearGradient id="journeyMapSurface" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#ffffff" />
-                <stop offset="68%" stopColor="#f7f8fa" />
-                <stop offset="100%" stopColor="#eef0f3" />
-              </linearGradient>
-              <linearGradient id="journeyMapLand" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#fbfbfc" />
-                <stop offset="100%" stopColor="#f0f1f3" />
-              </linearGradient>
-              <pattern
-                id="journeyMapDots"
-                width="18"
-                height="18"
-                patternUnits="userSpaceOnUse"
-              >
-                <circle cx="2" cy="2" r="1" fill="rgba(17,17,19,0.075)" />
-              </pattern>
-              <filter id="journeyMapLift" x="-12%" y="-12%" width="124%" height="124%">
-                <feDropShadow
-                  dx="0"
-                  dy="12"
-                  floodColor="rgba(17,17,19,0.16)"
-                  stdDeviation="10"
-                />
-              </filter>
-              <clipPath id="journeyMapClip">
-                <rect
-                  height={MAP_HEIGHT}
-                  rx={MAP_RADIUS}
-                  width={MAP_WIDTH}
-                  x={MAP_X}
-                  y={MAP_Y}
-                />
-              </clipPath>
-            </defs>
-            <rect
-              className="journey-map-surface"
-              height={MAP_HEIGHT}
-              rx={MAP_RADIUS}
-              width={MAP_WIDTH}
-              x={MAP_X}
-              y={MAP_Y}
-            />
-            <g clipPath="url(#journeyMapClip)">
+            <svg
+              aria-hidden="true"
+              className="journey-map-canvas"
+              role="img"
+              viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
+            >
+              <defs>
+                <linearGradient id="journeyMapSurface" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#ffffff" />
+                  <stop offset="72%" stopColor="#f8f9fa" />
+                  <stop offset="100%" stopColor="#f1f2f4" />
+                </linearGradient>
+                <linearGradient id="journeyMapLand" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#f8f9fa" />
+                  <stop offset="100%" stopColor="#f1f2f4" />
+                </linearGradient>
+                <pattern
+                  id="journeyMapDots"
+                  width="22"
+                  height="22"
+                  patternUnits="userSpaceOnUse"
+                >
+                  <circle cx="2" cy="2" r="0.8" fill="rgba(17,17,19,0.045)" />
+                </pattern>
+                <filter id="journeyMapLift" x="-12%" y="-12%" width="124%" height="124%">
+                  <feDropShadow
+                    dx="0"
+                    dy="10"
+                    floodColor="rgba(17,17,19,0.11)"
+                    stdDeviation="9"
+                  />
+                </filter>
+                <clipPath id="journeyMapClip">
+                  <rect
+                    height={MAP_HEIGHT}
+                    rx={MAP_RADIUS}
+                    width={MAP_WIDTH}
+                    x={MAP_X}
+                    y={MAP_Y}
+                  />
+                </clipPath>
+              </defs>
               <rect
-                className="journey-map-dotfield"
+                className="journey-map-surface"
                 height={MAP_HEIGHT}
+                rx={MAP_RADIUS}
                 width={MAP_WIDTH}
                 x={MAP_X}
                 y={MAP_Y}
               />
-            </g>
-            <rect
-              className="journey-map-outline"
-              height={MAP_HEIGHT}
-              rx={MAP_RADIUS}
-              width={MAP_WIDTH}
-              x={MAP_X}
-              y={MAP_Y}
-            />
-          </svg>
+              <g clipPath="url(#journeyMapClip)">
+                <rect
+                  className="journey-map-dotfield"
+                  height={MAP_HEIGHT}
+                  width={MAP_WIDTH}
+                  x={MAP_X}
+                  y={MAP_Y}
+                />
+              </g>
+              <rect
+                className="journey-map-outline"
+                height={MAP_HEIGHT}
+                rx={MAP_RADIUS}
+                width={MAP_WIDTH}
+                x={MAP_X}
+                y={MAP_Y}
+              />
+            </svg>
 
-          <div className="journey-map-viewport">
-            <canvas
-              aria-hidden="true"
-              className="journey-map-world-canvas"
-              ref={canvasRef}
-            />
-            <div className="journey-map-marker-layer">
-              {markers.map((marker) => {
-                const visibleMarker = transformPoint(marker, zoom)
+            <div className="journey-map-viewport">
+              <canvas
+                aria-hidden="true"
+                className="journey-map-world-canvas"
+                ref={canvasRef}
+              />
+              <div className="journey-map-marker-layer">
+                {markers.map((marker) => {
+                  const visibleMarker = transformPoint(marker, zoom)
 
-                return (
-                  <Link
-                    aria-label={formatPlace(marker.globe)}
-                    className={`journey-map-marker-link${
-                      marker.key === activeKey ? ' is-active' : ''
-                    }`}
-                    href={`/blog/${marker.posts[0].slug}`}
-                    key={marker.key}
-                    onBlur={scheduleHidePreview}
-                    onFocus={() => showPreview(marker.key)}
-                    onMouseEnter={() => showPreview(marker.key)}
-                    onMouseLeave={scheduleHidePreview}
-                    onMouseMove={() => showPreview(marker.key)}
-                    onPointerEnter={() => showPreview(marker.key)}
-                    prefetch={false}
-                    ref={(node) => {
-                      if (node) {
-                        markerSymbolRefs.current.set(marker.key, node)
-                      } else {
-                        markerSymbolRefs.current.delete(marker.key)
-                      }
-                    }}
-                    style={{
-                      left: `${(visibleMarker.x / VIEWBOX_WIDTH) * 100}%`,
-                      opacity: visibleMarker.visible ? 1 : 0,
-                      pointerEvents: visibleMarker.visible ? 'auto' : 'none',
-                      top: `${(visibleMarker.y / VIEWBOX_HEIGHT) * 100}%`,
-                    }}
-                  >
-                    <span className="journey-map-marker-hit" />
-                    <span className="journey-map-marker-halo" />
-                    <span className="journey-map-marker-ring" />
-                    <span className="journey-map-marker-core" />
-                  </Link>
-                )
-              })}
-            </div>
-          </div>
-
-          {activeMarker && activeCard && (
-            <div
-              className={`journey-globe-card journey-globe-card--${activeCard.side}${
-                activeMarker.posts.length > 1 ? ' journey-globe-card--stacked' : ''
-              }`}
-              onBlur={scheduleHidePreview}
-              onFocus={() => showPreview(activeMarker.key)}
-              onMouseEnter={() => showPreview(activeMarker.key)}
-              onMouseLeave={scheduleHidePreview}
-              style={activeCard.style}
-            >
-              <span>{formatPlace(activeMarker.globe)}</span>
-              <div className="journey-globe-card-list">
-                {activeMarker.posts.map((post) => (
-                  <Link
-                    className="journey-globe-card-item"
-                    href={`/blog/${post.slug}`}
-                    key={post.slug}
-                    prefetch={false}
-                  >
-                    <strong>{post.displayLocation || post.location}</strong>
-                    <em>{post.date}</em>
-                    <p>{post.title}</p>
-                  </Link>
-                ))}
+                  return (
+                    <Link
+                      aria-label={formatPlace(marker.globe)}
+                      className={`journey-map-marker-link${
+                        marker.key === activeKey ? ' is-active' : ''
+                      }`}
+                      href={`/blog/${marker.posts[0].slug}`}
+                      key={marker.key}
+                      onBlur={scheduleHidePreview}
+                      onFocus={() => showPreview(marker.key)}
+                      onMouseEnter={() => showPreview(marker.key)}
+                      onMouseLeave={scheduleHidePreview}
+                      onMouseMove={() => showPreview(marker.key)}
+                      onPointerEnter={() => showPreview(marker.key)}
+                      prefetch={false}
+                      ref={(node) => {
+                        if (node) {
+                          markerSymbolRefs.current.set(marker.key, node)
+                        } else {
+                          markerSymbolRefs.current.delete(marker.key)
+                        }
+                      }}
+                      style={{
+                        left: `${(visibleMarker.x / VIEWBOX_WIDTH) * 100}%`,
+                        opacity: visibleMarker.visible ? 1 : 0,
+                        pointerEvents: visibleMarker.visible ? 'auto' : 'none',
+                        top: `${(visibleMarker.y / VIEWBOX_HEIGHT) * 100}%`,
+                      }}
+                    >
+                      <span className="journey-map-marker-hit" />
+                      <span className="journey-map-marker-halo" />
+                      <span className="journey-map-marker-ring" />
+                      <span className="journey-map-marker-core" />
+                    </Link>
+                  )
+                })}
               </div>
             </div>
-          )}
+
+            {activeMarker && activeCard && (
+              <div
+                className={`journey-globe-card journey-globe-card--${activeCard.side}${
+                  activeMarker.posts.length > 1 ? ' journey-globe-card--stacked' : ''
+                }`}
+                onBlur={scheduleHidePreview}
+                onFocus={() => showPreview(activeMarker.key)}
+                onMouseEnter={() => showPreview(activeMarker.key)}
+                onMouseLeave={scheduleHidePreview}
+                style={activeCard.style}
+              >
+                <span>{formatPlace(activeMarker.globe)}</span>
+                <div className="journey-globe-card-list">
+                  {activeMarker.posts.map((post) => (
+                    <Link
+                      className="journey-globe-card-item"
+                      href={`/blog/${post.slug}`}
+                      key={post.slug}
+                      prefetch={false}
+                    >
+                      <strong>{post.displayLocation || post.location}</strong>
+                      <em>{post.date}</em>
+                      <p>{post.title}</p>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       <p className="journey-globe-hint">
-        {postCount} posts across {markers.length} places. Scroll to zoom.
+        Scroll to zoom · drag to explore
       </p>
     </section>
   )

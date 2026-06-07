@@ -420,44 +420,43 @@ p {
   position: relative;
   overflow: hidden;
   margin-bottom: 18px;
-  padding: clamp(14px, 2.5vw, 22px);
+  padding: clamp(15px, 2vw, 20px);
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
   background:
-    radial-gradient(circle at 70% 42%, rgba(17, 17, 19, 0.052), transparent 28%),
-    radial-gradient(circle at 32% 55%, rgba(17, 17, 19, 0.032), transparent 34%),
-    linear-gradient(90deg, rgba(17, 17, 19, 0.026) 1px, transparent 1px),
-    linear-gradient(180deg, rgba(17, 17, 19, 0.026) 1px, transparent 1px),
+    radial-gradient(circle at 70% 42%, rgba(17, 17, 19, 0.036), transparent 28%),
+    radial-gradient(circle at 32% 55%, rgba(17, 17, 19, 0.022), transparent 34%),
     rgba(255, 255, 255, 0.88);
-  background-size: auto, auto, 44px 44px, 44px 44px, auto;
+  background-size: auto, auto, auto;
   box-shadow: var(--shadow);
 }
 
 .journey-globe-heading {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
-  gap: 18px;
-  margin-bottom: 2px;
+  gap: 16px;
+  width: min(90%, 810px);
+  margin: 0 auto 10px;
 }
 
-.journey-globe-heading .eyebrow {
-  color: rgba(108, 113, 122, 0.74);
-  font-size: 0.62rem;
-  letter-spacing: 0.16em;
+.journey-globe-heading span {
+  color: rgba(108, 113, 122, 0.68);
+  font-size: 0.68rem;
+  font-weight: 620;
+  letter-spacing: 0.14em;
+  line-height: 1;
 }
 
-.journey-globe-heading h2 {
-  margin-top: 4px;
-  color: #6f747d;
-  font-size: clamp(0.98rem, 1.35vw, 1.18rem);
-  font-weight: 720;
-  letter-spacing: 0;
+.journey-globe-stage-shell {
+  width: min(100%, 900px);
+  margin: 0 auto;
+  overflow: visible;
 }
 
 .journey-globe-stage {
   position: relative;
-  width: min(100%, 1040px);
+  width: min(90%, 810px);
   margin: 0 auto;
   aspect-ratio: 1.846 / 1;
   cursor: grab;
@@ -472,7 +471,7 @@ p {
 .journey-map-drift {
   position: absolute;
   inset: 0;
-  filter: drop-shadow(0 18px 34px rgba(17, 17, 19, 0.08));
+  filter: drop-shadow(0 14px 26px rgba(17, 17, 19, 0.065));
   transform-origin: 50% 50%;
   transition:
     filter 220ms ease,
@@ -480,7 +479,7 @@ p {
 }
 
 .journey-map-drift.is-previewing {
-  filter: drop-shadow(0 26px 46px rgba(17, 17, 19, 0.12));
+  filter: drop-shadow(0 20px 36px rgba(17, 17, 19, 0.1));
 }
 
 .journey-map-canvas {
@@ -520,13 +519,13 @@ p {
 
 .journey-map-dotfield {
   fill: url('#journeyMapDots');
-  opacity: 0.7;
+  opacity: 0.38;
 }
 
 .journey-map-graticule {
   fill: none;
-  stroke: rgba(17, 17, 19, 0.04);
-  stroke-width: 0.46;
+  stroke: rgba(17, 17, 19, 0.026);
+  stroke-width: 0.32;
   vector-effect: non-scaling-stroke;
 }
 
@@ -537,20 +536,20 @@ p {
 
 .journey-map-coastline {
   fill: none;
-  stroke: rgba(17, 17, 19, 0.34);
+  stroke: rgba(17, 17, 19, 0.24);
   stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-width: 0.48;
+  stroke-width: 0.62;
   vector-effect: non-scaling-stroke;
 }
 
 .journey-map-borders {
   fill: none;
-  opacity: 0.86;
-  stroke: rgba(17, 17, 19, 0.21);
+  opacity: 0.9;
+  stroke: rgba(17, 17, 19, 0.18);
   stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-width: 0.3;
+  stroke-width: 0.4;
   vector-effect: non-scaling-stroke;
 }
 
@@ -809,10 +808,11 @@ p {
 }
 
 .journey-globe-hint {
-  margin: 12px 0 0;
-  color: rgba(154, 158, 166, 0.82);
-  font-size: 0.68rem;
-  font-weight: 580;
+  margin: 9px 0 0;
+  color: rgba(154, 158, 166, 0.66);
+  font-size: 0.62rem;
+  font-weight: 520;
+  letter-spacing: 0.05em;
   text-align: center;
 }
 
@@ -2583,17 +2583,39 @@ p {
   }
 
   .journey-globe {
-    padding: 22px;
+    padding: 18px 0 16px;
   }
 
   .journey-globe-heading {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 4px;
+    width: auto;
+    margin: 0 18px 10px;
+  }
+
+  .journey-globe-heading span {
+    font-size: 0.66rem;
+  }
+
+  .journey-globe-stage-shell {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0 18px 8px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .journey-globe-stage-shell::-webkit-scrollbar {
+    display: none;
   }
 
   .journey-globe-stage {
-    width: 100%;
+    width: max(860px, 224vw);
+    max-width: none;
+    touch-action: pan-x;
+  }
+
+  .journey-map-drift {
+    inset: 0;
   }
 
   .journey-globe-card {
@@ -2601,8 +2623,8 @@ p {
   }
 
   .journey-globe-hint {
-    margin-top: 2px;
-    text-align: left;
+    margin: 2px 18px 0;
+    text-align: center;
   }
 
   .art-orbit-large {
