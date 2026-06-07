@@ -20,6 +20,7 @@ const PINCH_WHEEL_SENSITIVITY = 0.0034
 const MAX_WHEEL_DELTA = 92
 const TRACKPAD_SCROLL_DELTA = 82
 const ZOOM_SYNC_DELAY = 180
+const REDRAW_IDLE_DELAY = 90
 const MAX_CANVAS_DPR = 3
 const DEFAULT_ZOOM = { scale: 1, x: 0, y: 0 }
 
@@ -97,6 +98,14 @@ function transformPoint(marker, zoom) {
       y >= MAP_Y &&
       y <= MAP_Y + MAP_HEIGHT,
   }
+}
+
+function getCanvasDeltaTransform(displayZoom, renderedZoom) {
+  const scale = displayZoom.scale / renderedZoom.scale
+  const x = displayZoom.x - renderedZoom.x * scale
+  const y = displayZoom.y - renderedZoom.y * scale
+
+  return `translate3d(${(x / VIEWBOX_WIDTH) * 100}%, ${(y / VIEWBOX_HEIGHT) * 100}%, 0) scale(${scale})`
 }
 
 function getViewboxPoint(clientX, clientY, rect) {
@@ -231,6 +240,7 @@ export default function JourneyGlobe({ posts }) {
   const applyZoomToDomRef = useRef(null)
   const canvasRef = useRef(null)
   const canvasMetricsRef = useRef(null)
+  const canvasRenderedZoomRef = useRef(DEFAULT_ZOOM)
   const stageRef = useRef(null)
   const dragRef = useRef(null)
   const hideTimerRef = useRef(null)
@@ -239,6 +249,7 @@ export default function JourneyGlobe({ posts }) {
   const pathsRef = useRef(null)
   const pinchRef = useRef(null)
   const pointerRefs = useRef(new Map())
+  const redrawTimerRef = useRef(null)
   const resetPointerGestureRef = useRef(null)
   const syncTimerRef = useRef(null)
   const setZoomSmoothRef = useRef(null)
@@ -348,6 +359,25 @@ export default function JourneyGlobe({ posts }) {
     context.restore()
   }
 
+  function applyCanvasTransform(nextZoom) {
+    const canvas = canvasRef.current
+
+    if (!canvas) {
+      return
+    }
+
+    canvas.style.transform = getCanvasDeltaTransform(
+      nextZoom,
+      canvasRenderedZoomRef.current
+    )
+  }
+
+  function renderCanvasAtZoom(nextZoom) {
+    drawMapToCanvas(nextZoom)
+    canvasRenderedZoomRef.current = nextZoom
+    applyCanvasTransform(nextZoom)
+  }
+
   function positionMarkerNodes(nextZoom) {
     markerSymbolRefs.current.forEach((node, key) => {
       const marker = markerByKeyRef.current.get(key)
@@ -365,8 +395,13 @@ export default function JourneyGlobe({ posts }) {
     })
   }
 
-  function applyZoomToDom(nextZoom) {
-    drawMapToCanvas(nextZoom)
+  function applyZoomToDom(nextZoom, options = {}) {
+    if (options.render) {
+      renderCanvasAtZoom(nextZoom)
+    } else {
+      applyCanvasTransform(nextZoom)
+    }
+
     positionMarkerNodes(nextZoom)
   }
   applyZoomToDomRef.current = applyZoomToDom
@@ -389,6 +424,21 @@ export default function JourneyGlobe({ posts }) {
     }
   }
 
+  function clearRedrawTimer() {
+    if (redrawTimerRef.current) {
+      clearTimeout(redrawTimerRef.current)
+      redrawTimerRef.current = null
+    }
+  }
+
+  function scheduleCrispRedraw() {
+    clearRedrawTimer()
+    redrawTimerRef.current = setTimeout(() => {
+      redrawTimerRef.current = null
+      applyZoomToDomRef.current?.(zoomRef.current, { render: true })
+    }, REDRAW_IDLE_DELAY)
+  }
+
   function scheduleZoomFrame(options = {}) {
     if (options.sync !== false) {
       shouldSyncAfterFrameRef.current = true
@@ -402,6 +452,7 @@ export default function JourneyGlobe({ posts }) {
       zoomFrameRef.current = null
       visualZoomRef.current = zoomRef.current
       applyZoomToDomRef.current?.(visualZoomRef.current)
+      scheduleCrispRedraw()
 
       if (shouldSyncAfterFrameRef.current) {
         shouldSyncAfterFrameRef.current = false
@@ -414,7 +465,7 @@ export default function JourneyGlobe({ posts }) {
     cancelZoomFrame()
     zoomRef.current = nextZoom
     visualZoomRef.current = nextZoom
-    applyZoomToDomRef.current?.(nextZoom)
+    applyZoomToDomRef.current?.(nextZoom, { render: true })
 
     if (options.sync !== false) {
       syncZoomStateSoon()
@@ -424,7 +475,8 @@ export default function JourneyGlobe({ posts }) {
   function flushZoomState() {
     cancelZoomFrame()
     visualZoomRef.current = zoomRef.current
-    applyZoomToDomRef.current?.(zoomRef.current)
+    clearRedrawTimer()
+    applyZoomToDomRef.current?.(zoomRef.current, { render: true })
 
     if (syncTimerRef.current) {
       clearTimeout(syncTimerRef.current)
@@ -449,6 +501,7 @@ export default function JourneyGlobe({ posts }) {
   useEffect(
     () => () => {
       cancelZoomFrame()
+      clearRedrawTimer()
 
       if (syncTimerRef.current) {
         clearTimeout(syncTimerRef.current)
@@ -482,7 +535,8 @@ export default function JourneyGlobe({ posts }) {
       canvasMetricsRef.current = metrics
       canvas.width = Math.max(1, Math.round(metrics.width * metrics.pixelRatio))
       canvas.height = Math.max(1, Math.round(metrics.height * metrics.pixelRatio))
-      applyZoomToDomRef.current?.(visualZoomRef.current)
+      canvasRenderedZoomRef.current = visualZoomRef.current
+      applyZoomToDomRef.current?.(visualZoomRef.current, { render: true })
     }
 
     resizeCanvas()
@@ -496,7 +550,7 @@ export default function JourneyGlobe({ posts }) {
   }, [mapPaths])
 
   useEffect(() => {
-    applyZoomToDomRef.current?.(zoomRef.current)
+    applyZoomToDomRef.current?.(zoomRef.current, { render: true })
   }, [markers])
 
   function resetPointerGesture() {
@@ -513,6 +567,60 @@ export default function JourneyGlobe({ posts }) {
   }
   resetPointerGestureRef.current = resetPointerGesture
 
+  function handleMapWheel(event) {
+    const stage = stageRef.current
+
+    if (!stage) {
+      return
+    }
+
+    const rect = stage.getBoundingClientRect()
+    const isInsideStage =
+      event.clientX >= rect.left &&
+      event.clientX <= rect.right &&
+      event.clientY >= rect.top &&
+      event.clientY <= rect.bottom
+
+    if (!isInsideStage) {
+      return
+    }
+
+    const delta = getWheelDelta(event)
+
+    event.preventDefault()
+    event.stopPropagation()
+
+    if (!shouldWheelZoom(event, delta)) {
+      return
+    }
+
+    resetPointerGestureRef.current?.()
+
+    const focusX = ((event.clientX - rect.left) / rect.width) * VIEWBOX_WIDTH
+    const focusY = ((event.clientY - rect.top) / rect.height) * VIEWBOX_HEIGHT
+    const deltaY = clamp(
+      delta.y,
+      -MAX_WHEEL_DELTA,
+      MAX_WHEEL_DELTA
+    )
+    const sensitivity = event.ctrlKey ? PINCH_WHEEL_SENSITIVITY : WHEEL_SENSITIVITY
+    const current = zoomRef.current
+    const nextScale = clamp(
+      current.scale * Math.exp(-deltaY * sensitivity),
+      MIN_ZOOM,
+      MAX_ZOOM
+    )
+    const ratio = nextScale / current.scale
+
+    setZoomSmoothRef.current(
+      clampZoomTransform({
+        scale: nextScale,
+        x: focusX - (focusX - current.x) * ratio,
+        y: focusY - (focusY - current.y) * ratio,
+      })
+    )
+  }
+
   useEffect(() => {
     const stage = stageRef.current
 
@@ -520,61 +628,17 @@ export default function JourneyGlobe({ posts }) {
       return undefined
     }
 
-    function handleStageWheel(event) {
-      const rect = stage.getBoundingClientRect()
-      const isInsideStage =
-        event.clientX >= rect.left &&
-        event.clientX <= rect.right &&
-        event.clientY >= rect.top &&
-        event.clientY <= rect.bottom
-
-      if (!isInsideStage) {
-        return
-      }
-
-      const delta = getWheelDelta(event)
-
-      event.preventDefault()
-      event.stopPropagation()
-
-      if (!shouldWheelZoom(event, delta)) {
-        return
-      }
-
-      resetPointerGestureRef.current?.()
-
-      const focusX = ((event.clientX - rect.left) / rect.width) * VIEWBOX_WIDTH
-      const focusY = ((event.clientY - rect.top) / rect.height) * VIEWBOX_HEIGHT
-      const deltaY = clamp(
-        delta.y,
-        -MAX_WHEEL_DELTA,
-        MAX_WHEEL_DELTA
-      )
-      const sensitivity = event.ctrlKey ? PINCH_WHEEL_SENSITIVITY : WHEEL_SENSITIVITY
-      const current = zoomRef.current
-      const nextScale = clamp(
-        current.scale * Math.exp(-deltaY * sensitivity),
-        MIN_ZOOM,
-        MAX_ZOOM
-      )
-      const ratio = nextScale / current.scale
-
-      setZoomSmoothRef.current(
-        clampZoomTransform({
-          scale: nextScale,
-          x: focusX - (focusX - current.x) * ratio,
-          y: focusY - (focusY - current.y) * ratio,
-        })
-      )
-    }
-
-    document.addEventListener('wheel', handleStageWheel, {
+    stage.addEventListener('wheel', handleMapWheel, {
+      passive: false,
+    })
+    document.addEventListener('wheel', handleMapWheel, {
       capture: true,
       passive: false,
     })
 
     return () => {
-      document.removeEventListener('wheel', handleStageWheel, true)
+      stage.removeEventListener('wheel', handleMapWheel)
+      document.removeEventListener('wheel', handleMapWheel, true)
     }
   }, [])
 
@@ -785,6 +849,7 @@ export default function JourneyGlobe({ posts }) {
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerEnd}
+        onWheelCapture={handleMapWheel}
         ref={stageRef}
       >
         <div
