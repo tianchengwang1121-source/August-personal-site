@@ -16,11 +16,11 @@ const MAP_HEIGHT = VIEWBOX_HEIGHT - MAP_PADDING * 2
 const MIN_ZOOM = 1
 const MAX_ZOOM = 5.4
 const WHEEL_SENSITIVITY = 0.0026
-const PINCH_WHEEL_SENSITIVITY = 0.0034
+const PINCH_WHEEL_SENSITIVITY = 0.004
 const MAX_WHEEL_DELTA = 92
 const TRACKPAD_SCROLL_DELTA = 82
 const ZOOM_SYNC_DELAY = 180
-const REDRAW_IDLE_DELAY = 90
+const REDRAW_IDLE_DELAY = 160
 const MAX_CANVAS_DPR = 3
 const DEFAULT_ZOOM = { scale: 1, x: 0, y: 0 }
 
@@ -256,6 +256,7 @@ export default function JourneyGlobe({ posts }) {
   const visualZoomRef = useRef(DEFAULT_ZOOM)
   const zoomRef = useRef(DEFAULT_ZOOM)
   const zoomFrameRef = useRef(null)
+  const shouldRenderAfterFrameRef = useRef(false)
   const shouldSyncAfterFrameRef = useRef(false)
 
   const mapPaths = useMemo(
@@ -422,6 +423,8 @@ export default function JourneyGlobe({ posts }) {
       cancelAnimationFrame(zoomFrameRef.current)
       zoomFrameRef.current = null
     }
+
+    shouldRenderAfterFrameRef.current = false
   }
 
   function clearRedrawTimer() {
@@ -444,6 +447,10 @@ export default function JourneyGlobe({ posts }) {
       shouldSyncAfterFrameRef.current = true
     }
 
+    if (options.render) {
+      shouldRenderAfterFrameRef.current = true
+    }
+
     if (zoomFrameRef.current) {
       return
     }
@@ -451,8 +458,16 @@ export default function JourneyGlobe({ posts }) {
     zoomFrameRef.current = requestAnimationFrame(() => {
       zoomFrameRef.current = null
       visualZoomRef.current = zoomRef.current
-      applyZoomToDomRef.current?.(visualZoomRef.current)
-      scheduleCrispRedraw()
+      const shouldRender = shouldRenderAfterFrameRef.current
+
+      shouldRenderAfterFrameRef.current = false
+      applyZoomToDomRef.current?.(visualZoomRef.current, {
+        render: shouldRender,
+      })
+
+      if (!shouldRender) {
+        scheduleCrispRedraw()
+      }
 
       if (shouldSyncAfterFrameRef.current) {
         shouldSyncAfterFrameRef.current = false
@@ -589,6 +604,7 @@ export default function JourneyGlobe({ posts }) {
 
     event.preventDefault()
     event.stopPropagation()
+    event.stopImmediatePropagation?.()
 
     if (!shouldWheelZoom(event, delta)) {
       return
@@ -628,16 +644,12 @@ export default function JourneyGlobe({ posts }) {
       return undefined
     }
 
-    stage.addEventListener('wheel', handleMapWheel, {
-      passive: false,
-    })
     document.addEventListener('wheel', handleMapWheel, {
       capture: true,
       passive: false,
     })
 
     return () => {
-      stage.removeEventListener('wheel', handleMapWheel)
       document.removeEventListener('wheel', handleMapWheel, true)
     }
   }, [])
@@ -656,7 +668,7 @@ export default function JourneyGlobe({ posts }) {
       return
     }
 
-    flushZoomState()
+    setZoom(zoomRef.current)
     setActiveKey(key)
   }
 
@@ -807,7 +819,7 @@ export default function JourneyGlobe({ posts }) {
         x: drag.zoom.x + deltaX,
         y: drag.zoom.y + deltaY,
       }),
-      { sync: false }
+      { render: true, sync: false }
     )
   }
 
@@ -849,7 +861,6 @@ export default function JourneyGlobe({ posts }) {
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerEnd}
-        onWheelCapture={handleMapWheel}
         ref={stageRef}
       >
         <div
