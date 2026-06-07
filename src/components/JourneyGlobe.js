@@ -14,12 +14,12 @@ const MAP_X = MAP_PADDING
 const MAP_Y = MAP_PADDING
 const MAP_WIDTH = VIEWBOX_WIDTH - MAP_PADDING * 2
 const MAP_HEIGHT = VIEWBOX_HEIGHT - MAP_PADDING * 2
+const MAP_CENTER_LONGITUDE = 150
 const MIN_ZOOM = 1
 const MAX_ZOOM = 5.4
 const WHEEL_SENSITIVITY = 0.0026
 const PINCH_WHEEL_SENSITIVITY = 0.004
 const MAX_WHEEL_DELTA = 92
-const TRACKPAD_SCROLL_DELTA = 82
 const ZOOM_SYNC_DELAY = 180
 const REDRAW_IDLE_DELAY = 160
 const DEFAULT_ZOOM = { scale: 1, x: 0, y: 0 }
@@ -29,7 +29,9 @@ const mapFrame = [
   [VIEWBOX_WIDTH - MAP_PADDING, VIEWBOX_HEIGHT - MAP_PADDING],
 ]
 
-const mapProjection = geoEquirectangular().fitExtent(mapFrame, { type: 'Sphere' })
+const mapProjection = geoEquirectangular()
+  .rotate([-MAP_CENTER_LONGITUDE, 0])
+  .fitExtent(mapFrame, { type: 'Sphere' })
 const mapPath = geoPath(mapProjection)
 const graticule = geoGraticule().step([20, 20])
 const landFeature = feature(worldAtlas, worldAtlas.objects.land)
@@ -132,7 +134,7 @@ function shouldWheelZoom(event, delta) {
   const absX = Math.abs(delta.x)
   const absY = Math.abs(delta.y)
 
-  if (absX > 0 || absY < TRACKPAD_SCROLL_DELTA || !Number.isInteger(event.deltaY)) {
+  if (absX > 0 || absY === 0 || !Number.isInteger(event.deltaY)) {
     return false
   }
 
