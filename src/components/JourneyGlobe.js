@@ -6,8 +6,8 @@ import chinaProvinces from '../data/china-provinces.json'
 import worldAtlas from 'world-atlas/countries-10m.json'
 
 const VIEWBOX_WIDTH = 960
-const VIEWBOX_HEIGHT = 520
-const MAP_PADDING = 18
+const VIEWBOX_HEIGHT = 480
+const MAP_PADDING = 12
 const MAP_RADIUS = 24
 const MAP_X = MAP_PADDING
 const MAP_Y = MAP_PADDING
@@ -21,7 +21,6 @@ const MAX_WHEEL_DELTA = 92
 const TRACKPAD_SCROLL_DELTA = 82
 const ZOOM_SYNC_DELAY = 180
 const REDRAW_IDLE_DELAY = 160
-const MAX_CANVAS_DPR = 3
 const DEFAULT_ZOOM = { scale: 1, x: 0, y: 0 }
 
 const mapFrame = [
@@ -100,12 +99,8 @@ function transformPoint(marker, zoom) {
   }
 }
 
-function getCanvasDeltaTransform(displayZoom, renderedZoom) {
-  const scale = displayZoom.scale / renderedZoom.scale
-  const x = displayZoom.x - renderedZoom.x * scale
-  const y = displayZoom.y - renderedZoom.y * scale
-
-  return `translate3d(${(x / VIEWBOX_WIDTH) * 100}%, ${(y / VIEWBOX_HEIGHT) * 100}%, 0) scale(${scale})`
+function getLayerTransform(nextZoom) {
+  return `translate3d(${(nextZoom.x / VIEWBOX_WIDTH) * 100}%, ${(nextZoom.y / VIEWBOX_HEIGHT) * 100}%, 0) scale(${nextZoom.scale})`
 }
 
 function getViewboxPoint(clientX, clientY, rect) {
@@ -204,50 +199,20 @@ function getCardPlacement(marker) {
   }
 }
 
-function traceRoundedRect(context, x, y, width, height, radius) {
-  const safeRadius = Math.min(radius, width / 2, height / 2)
-
-  context.beginPath()
-  context.moveTo(x + safeRadius, y)
-  context.lineTo(x + width - safeRadius, y)
-  context.quadraticCurveTo(x + width, y, x + width, y + safeRadius)
-  context.lineTo(x + width, y + height - safeRadius)
-  context.quadraticCurveTo(x + width, y + height, x + width - safeRadius, y + height)
-  context.lineTo(x + safeRadius, y + height)
-  context.quadraticCurveTo(x, y + height, x, y + height - safeRadius)
-  context.lineTo(x, y + safeRadius)
-  context.quadraticCurveTo(x, y, x + safeRadius, y)
-  context.closePath()
-}
-
-function getCanvasScale(canvas) {
-  const rect = canvas.getBoundingClientRect()
-  const pixelRatio = Math.min(window.devicePixelRatio || 1, MAX_CANVAS_DPR)
-
-  return {
-    height: rect.height,
-    pixelRatio,
-    scaleX: rect.width / VIEWBOX_WIDTH,
-    scaleY: rect.height / VIEWBOX_HEIGHT,
-    width: rect.width,
-  }
-}
-
 export default function JourneyGlobe({ posts }) {
   const [activeKey, setActiveKey] = useState(null)
   const [zoom, setZoom] = useState(DEFAULT_ZOOM)
   const [isDragging, setIsDragging] = useState(false)
   const applyZoomToDomRef = useRef(null)
-  const canvasRef = useRef(null)
-  const canvasMetricsRef = useRef(null)
-  const canvasRenderedZoomRef = useRef(DEFAULT_ZOOM)
+  const chinaProvincesRef = useRef(null)
+  const mapContentRef = useRef(null)
+  const markerPlaneRef = useRef(null)
   const stageShellRef = useRef(null)
   const stageRef = useRef(null)
   const dragRef = useRef(null)
   const hideTimerRef = useRef(null)
   const markerByKeyRef = useRef(new Map())
   const markerSymbolRefs = useRef(new Map())
-  const pathsRef = useRef(null)
   const pinchRef = useRef(null)
   const pointerRefs = useRef(new Map())
   const pageScrollLockRef = useRef(null)
@@ -298,92 +263,12 @@ export default function JourneyGlobe({ posts }) {
   )
   markerByKeyRef.current = new Map(markers.map((marker) => [marker.key, marker]))
 
-  const visibleMarkers = useMemo(
-    () => markers.map((marker) => transformPoint(marker, zoom)),
-    [markers, zoom]
-  )
-
   const activeSourceMarker = activeKey ? markerByKeyRef.current.get(activeKey) : null
   const activeMarker = activeSourceMarker
     ? transformPoint(activeSourceMarker, zoomRef.current)
     : null
   const activeCard = activeMarker ? getCardPlacement(activeMarker) : null
   const placeCountLabel = `${markers.length} ${markers.length === 1 ? 'PLACE' : 'PLACES'}`
-
-  function drawMapToCanvas(nextZoom) {
-    const canvas = canvasRef.current
-    const paths = pathsRef.current
-
-    if (!canvas || !paths) {
-      return
-    }
-
-    const context = canvas.getContext('2d')
-    const metrics = canvasMetricsRef.current || getCanvasScale(canvas)
-    const { pixelRatio, scaleX, scaleY } = metrics
-    const lineScale = Math.max(nextZoom.scale, 1)
-
-    context.setTransform(1, 0, 0, 1, 0, 0)
-    context.clearRect(0, 0, canvas.width, canvas.height)
-    context.setTransform(pixelRatio * scaleX, 0, 0, pixelRatio * scaleY, 0, 0)
-    context.save()
-    traceRoundedRect(context, MAP_X, MAP_Y, MAP_WIDTH, MAP_HEIGHT, MAP_RADIUS)
-    context.clip()
-    context.translate(nextZoom.x, nextZoom.y)
-    context.scale(nextZoom.scale, nextZoom.scale)
-
-    context.lineCap = 'round'
-    context.lineJoin = 'round'
-
-    context.strokeStyle = 'rgba(17, 17, 19, 0.026)'
-    context.lineWidth = 0.32 / lineScale
-    context.stroke(paths.graticule)
-
-    const landGradient = context.createLinearGradient(0, MAP_Y, 0, MAP_Y + MAP_HEIGHT)
-    landGradient.addColorStop(0, '#f8f9fa')
-    landGradient.addColorStop(1, '#f1f2f4')
-    context.fillStyle = landGradient
-    context.fill(paths.land)
-
-    context.strokeStyle = 'rgba(17, 17, 19, 0.24)'
-    context.lineWidth = 0.62 / lineScale
-    context.stroke(paths.coastline)
-
-    context.globalAlpha = 0.9
-    context.strokeStyle = 'rgba(17, 17, 19, 0.18)'
-    context.lineWidth = 0.4 / lineScale
-    context.stroke(paths.borders)
-    context.globalAlpha = 1
-
-    if (nextZoom.scale >= 1.45) {
-      context.globalAlpha = 0.68
-      context.strokeStyle = 'rgba(17, 17, 19, 0.18)'
-      context.lineWidth = 0.36 / lineScale
-      context.stroke(paths.chinaProvinces)
-      context.globalAlpha = 1
-    }
-
-    context.restore()
-  }
-
-  function applyCanvasTransform(nextZoom) {
-    const canvas = canvasRef.current
-
-    if (!canvas) {
-      return
-    }
-
-    canvas.style.transform = getCanvasDeltaTransform(
-      nextZoom,
-      canvasRenderedZoomRef.current
-    )
-  }
-
-  function renderCanvasAtZoom(nextZoom) {
-    drawMapToCanvas(nextZoom)
-    canvasRenderedZoomRef.current = nextZoom
-    applyCanvasTransform(nextZoom)
-  }
 
   function positionMarkerNodes(nextZoom) {
     markerSymbolRefs.current.forEach((node, key) => {
@@ -395,18 +280,30 @@ export default function JourneyGlobe({ posts }) {
 
       const visibleMarker = transformPoint(marker, nextZoom)
 
-      node.style.left = `${(visibleMarker.x / VIEWBOX_WIDTH) * 100}%`
-      node.style.top = `${(visibleMarker.y / VIEWBOX_HEIGHT) * 100}%`
       node.style.opacity = visibleMarker.visible ? '1' : '0'
       node.style.pointerEvents = visibleMarker.visible ? 'auto' : 'none'
     })
   }
 
-  function applyZoomToDom(nextZoom, options = {}) {
-    if (options.render) {
-      renderCanvasAtZoom(nextZoom)
-    } else {
-      applyCanvasTransform(nextZoom)
+  function applyZoomToDom(nextZoom) {
+    const transform = `translate(${nextZoom.x} ${nextZoom.y}) scale(${nextZoom.scale})`
+    const markerTransform = getLayerTransform(nextZoom)
+
+    if (mapContentRef.current) {
+      mapContentRef.current.setAttribute('transform', transform)
+    }
+
+    if (markerPlaneRef.current) {
+      markerPlaneRef.current.style.transform = markerTransform
+      markerPlaneRef.current.style.setProperty(
+        '--marker-counter-scale',
+        String(1 / nextZoom.scale)
+      )
+    }
+
+    if (chinaProvincesRef.current) {
+      chinaProvincesRef.current.style.opacity =
+        nextZoom.scale >= 1.45 ? '0.68' : '0'
     }
 
     positionMarkerNodes(nextZoom)
@@ -555,45 +452,6 @@ export default function JourneyGlobe({ posts }) {
     },
     []
   )
-
-  useEffect(() => {
-    if (typeof Path2D === 'undefined') {
-      return undefined
-    }
-
-    pathsRef.current = {
-      borders: new Path2D(mapPaths.borders),
-      chinaProvinces: new Path2D(mapPaths.chinaProvinces),
-      coastline: new Path2D(mapPaths.coastline),
-      graticule: new Path2D(mapPaths.graticule),
-      land: new Path2D(mapPaths.land),
-    }
-
-    const canvas = canvasRef.current
-
-    if (!canvas) {
-      return undefined
-    }
-
-    function resizeCanvas() {
-      const metrics = getCanvasScale(canvas)
-
-      canvasMetricsRef.current = metrics
-      canvas.width = Math.max(1, Math.round(metrics.width * metrics.pixelRatio))
-      canvas.height = Math.max(1, Math.round(metrics.height * metrics.pixelRatio))
-      canvasRenderedZoomRef.current = visualZoomRef.current
-      applyZoomToDomRef.current?.(visualZoomRef.current, { render: true })
-    }
-
-    resizeCanvas()
-
-    const observer = new ResizeObserver(resizeCanvas)
-    observer.observe(canvas)
-
-    return () => {
-      observer.disconnect()
-    }
-  }, [mapPaths])
 
   useEffect(() => {
     applyZoomToDomRef.current?.(zoomRef.current, { render: true })
@@ -999,6 +857,17 @@ export default function JourneyGlobe({ posts }) {
                   x={MAP_X}
                   y={MAP_Y}
                 />
+                <g className="journey-map-world-group" ref={mapContentRef}>
+                  <path className="journey-map-graticule" d={mapPaths.graticule} />
+                  <path className="journey-map-land" d={mapPaths.land} />
+                  <path className="journey-map-coastline" d={mapPaths.coastline} />
+                  <path className="journey-map-borders" d={mapPaths.borders} />
+                  <path
+                    className="journey-map-china-provinces"
+                    d={mapPaths.chinaProvinces}
+                    ref={chinaProvincesRef}
+                  />
+                </g>
               </g>
               <rect
                 className="journey-map-outline"
@@ -1011,15 +880,8 @@ export default function JourneyGlobe({ posts }) {
             </svg>
 
             <div className="journey-map-viewport">
-              <canvas
-                aria-hidden="true"
-                className="journey-map-world-canvas"
-                ref={canvasRef}
-              />
-              <div className="journey-map-marker-layer">
+              <div className="journey-map-marker-layer" ref={markerPlaneRef}>
                 {markers.map((marker) => {
-                  const visibleMarker = transformPoint(marker, zoom)
-
                   return (
                     <Link
                       aria-label={formatPlace(marker.globe)}
@@ -1043,10 +905,8 @@ export default function JourneyGlobe({ posts }) {
                         }
                       }}
                       style={{
-                        left: `${(visibleMarker.x / VIEWBOX_WIDTH) * 100}%`,
-                        opacity: visibleMarker.visible ? 1 : 0,
-                        pointerEvents: visibleMarker.visible ? 'auto' : 'none',
-                        top: `${(visibleMarker.y / VIEWBOX_HEIGHT) * 100}%`,
+                        left: `${(marker.x / VIEWBOX_WIDTH) * 100}%`,
+                        top: `${(marker.y / VIEWBOX_HEIGHT) * 100}%`,
                       }}
                     >
                       <span className="journey-map-marker-hit" />
