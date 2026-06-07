@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/router'
 import { geoEquirectangular, geoGraticule, geoPath } from 'd3-geo'
 import { feature, mesh } from 'topojson-client'
 import chinaProvinces from '../data/china-provinces.json'
@@ -7,7 +8,7 @@ import worldAtlas from 'world-atlas/countries-10m.json'
 
 const VIEWBOX_WIDTH = 960
 const VIEWBOX_HEIGHT = 480
-const MAP_PADDING = 12
+const MAP_PADDING = 0
 const MAP_RADIUS = 24
 const MAP_X = MAP_PADDING
 const MAP_Y = MAP_PADDING
@@ -97,10 +98,6 @@ function transformPoint(marker, zoom) {
       y >= MAP_Y &&
       y <= MAP_Y + MAP_HEIGHT,
   }
-}
-
-function getLayerTransform(nextZoom) {
-  return `translate3d(${(nextZoom.x / VIEWBOX_WIDTH) * 100}%, ${(nextZoom.y / VIEWBOX_HEIGHT) * 100}%, 0) scale(${nextZoom.scale})`
 }
 
 function getViewboxPoint(clientX, clientY, rect) {
@@ -200,13 +197,13 @@ function getCardPlacement(marker) {
 }
 
 export default function JourneyGlobe({ posts }) {
+  const router = useRouter()
   const [activeKey, setActiveKey] = useState(null)
-  const [zoom, setZoom] = useState(DEFAULT_ZOOM)
+  const [, setZoom] = useState(DEFAULT_ZOOM)
   const [isDragging, setIsDragging] = useState(false)
   const applyZoomToDomRef = useRef(null)
   const chinaProvincesRef = useRef(null)
   const mapContentRef = useRef(null)
-  const markerPlaneRef = useRef(null)
   const stageShellRef = useRef(null)
   const stageRef = useRef(null)
   const dragRef = useRef(null)
@@ -280,6 +277,10 @@ export default function JourneyGlobe({ posts }) {
 
       const visibleMarker = transformPoint(marker, nextZoom)
 
+      node.setAttribute(
+        'transform',
+        `translate(${marker.x} ${marker.y}) scale(${1 / nextZoom.scale})`
+      )
       node.style.opacity = visibleMarker.visible ? '1' : '0'
       node.style.pointerEvents = visibleMarker.visible ? 'auto' : 'none'
     })
@@ -287,18 +288,9 @@ export default function JourneyGlobe({ posts }) {
 
   function applyZoomToDom(nextZoom) {
     const transform = `translate(${nextZoom.x} ${nextZoom.y}) scale(${nextZoom.scale})`
-    const markerTransform = getLayerTransform(nextZoom)
 
     if (mapContentRef.current) {
       mapContentRef.current.setAttribute('transform', transform)
-    }
-
-    if (markerPlaneRef.current) {
-      markerPlaneRef.current.style.transform = markerTransform
-      markerPlaneRef.current.style.setProperty(
-        '--marker-counter-scale',
-        String(1 / nextZoom.scale)
-      )
     }
 
     if (chinaProvincesRef.current) {
@@ -597,6 +589,19 @@ export default function JourneyGlobe({ posts }) {
     setActiveKey(key)
   }
 
+  function openMarkerPost(event, marker) {
+    event.preventDefault()
+    router.push(`/blog/${marker.posts[0].slug}`)
+  }
+
+  function handleMarkerKeyDown(event, marker) {
+    if (event.key !== 'Enter' && event.key !== ' ') {
+      return
+    }
+
+    openMarkerPost(event, marker)
+  }
+
   function hidePreview() {
     clearHideTimer()
     setActiveKey(null)
@@ -867,6 +872,40 @@ export default function JourneyGlobe({ posts }) {
                     d={mapPaths.chinaProvinces}
                     ref={chinaProvincesRef}
                   />
+                  <g className="journey-map-marker-layer">
+                    {markers.map((marker) => (
+                      <g
+                        aria-label={formatPlace(marker.globe)}
+                        className={`journey-map-marker-link${
+                          marker.key === activeKey ? ' is-active' : ''
+                        }`}
+                        key={marker.key}
+                        onBlur={scheduleHidePreview}
+                        onClick={(event) => openMarkerPost(event, marker)}
+                        onFocus={() => showPreview(marker.key)}
+                        onKeyDown={(event) => handleMarkerKeyDown(event, marker)}
+                        onMouseEnter={() => showPreview(marker.key)}
+                        onMouseLeave={scheduleHidePreview}
+                        onMouseMove={() => showPreview(marker.key)}
+                        onPointerEnter={() => showPreview(marker.key)}
+                        ref={(node) => {
+                          if (node) {
+                            markerSymbolRefs.current.set(marker.key, node)
+                          } else {
+                            markerSymbolRefs.current.delete(marker.key)
+                          }
+                        }}
+                        role="link"
+                        tabIndex={0}
+                        transform={`translate(${marker.x} ${marker.y})`}
+                      >
+                        <circle className="journey-map-marker-hit" r="17" />
+                        <circle className="journey-map-marker-halo" r="11.5" />
+                        <circle className="journey-map-marker-ring" r="9" />
+                        <circle className="journey-map-marker-core" r="5.2" />
+                      </g>
+                    ))}
+                  </g>
                 </g>
               </g>
               <rect
@@ -878,46 +917,6 @@ export default function JourneyGlobe({ posts }) {
                 y={MAP_Y}
               />
             </svg>
-
-            <div className="journey-map-viewport">
-              <div className="journey-map-marker-layer" ref={markerPlaneRef}>
-                {markers.map((marker) => {
-                  return (
-                    <Link
-                      aria-label={formatPlace(marker.globe)}
-                      className={`journey-map-marker-link${
-                        marker.key === activeKey ? ' is-active' : ''
-                      }`}
-                      href={`/blog/${marker.posts[0].slug}`}
-                      key={marker.key}
-                      onBlur={scheduleHidePreview}
-                      onFocus={() => showPreview(marker.key)}
-                      onMouseEnter={() => showPreview(marker.key)}
-                      onMouseLeave={scheduleHidePreview}
-                      onMouseMove={() => showPreview(marker.key)}
-                      onPointerEnter={() => showPreview(marker.key)}
-                      prefetch={false}
-                      ref={(node) => {
-                        if (node) {
-                          markerSymbolRefs.current.set(marker.key, node)
-                        } else {
-                          markerSymbolRefs.current.delete(marker.key)
-                        }
-                      }}
-                      style={{
-                        left: `${(marker.x / VIEWBOX_WIDTH) * 100}%`,
-                        top: `${(marker.y / VIEWBOX_HEIGHT) * 100}%`,
-                      }}
-                    >
-                      <span className="journey-map-marker-hit" />
-                      <span className="journey-map-marker-halo" />
-                      <span className="journey-map-marker-ring" />
-                      <span className="journey-map-marker-core" />
-                    </Link>
-                  )
-                })}
-              </div>
-            </div>
 
             {activeMarker && activeCard && (
               <div
