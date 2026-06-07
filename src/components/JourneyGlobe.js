@@ -132,13 +132,13 @@ function shouldWheelZoom(event, delta) {
   }
 
   const absX = Math.abs(delta.x)
-  const absY = Math.abs(delta.y)
+  const wheelDelta = Math.abs(event.wheelDelta || event.webkitWheelDelta || 0)
 
-  if (absX > 0 || absY === 0 || !Number.isInteger(event.deltaY)) {
+  if (absX > 0 || !wheelDelta) {
     return false
   }
 
-  return true
+  return wheelDelta % 120 === 0
 }
 
 function getPinchMetrics(pointers, rect) {
