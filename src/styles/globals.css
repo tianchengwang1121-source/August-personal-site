@@ -471,21 +471,24 @@ p {
 .journey-map-drift {
   position: absolute;
   inset: 0;
-  filter: drop-shadow(0 14px 26px rgba(17, 17, 19, 0.065));
   transform-origin: 50% 50%;
   transition:
-    filter 220ms ease,
     transform 220ms ease;
 }
 
 .journey-map-drift.is-previewing {
-  filter: drop-shadow(0 20px 36px rgba(17, 17, 19, 0.1));
+  transform: translateY(-1px);
 }
 
 .journey-map-canvas {
+  border-radius: var(--radius-md);
+  box-shadow:
+    0 22px 42px rgba(17, 17, 19, 0.065),
+    0 2px 8px rgba(17, 17, 19, 0.045);
   display: block;
   width: 100%;
   height: 100%;
+  overflow: hidden;
   shape-rendering: geometricPrecision;
   user-select: none;
 }
@@ -507,7 +510,6 @@ p {
 
 .journey-map-surface {
   fill: url('#journeyMapSurface');
-  filter: url('#journeyMapLift');
 }
 
 .journey-map-dotfield {
