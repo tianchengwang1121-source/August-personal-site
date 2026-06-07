@@ -140,7 +140,7 @@ function shouldWheelZoom(event, delta) {
   }
 
   if (wheelDelta) {
-    return wheelDelta % 120 === 0 || absDeltaY >= 40
+    return wheelDelta % 120 === 0 || Number.isInteger(event.deltaY)
   }
 
   return Number.isInteger(event.deltaY) && absDeltaY >= 40
@@ -225,6 +225,7 @@ export default function JourneyGlobe({ posts }) {
   const redrawTimerRef = useRef(null)
   const resetPointerGestureRef = useRef(null)
   const syncTimerRef = useRef(null)
+  const shellScrollDragRef = useRef(null)
   const setZoomSmoothRef = useRef(null)
   const visualZoomRef = useRef(DEFAULT_ZOOM)
   const zoomRef = useRef(DEFAULT_ZOOM)
@@ -349,13 +350,24 @@ export default function JourneyGlobe({ posts }) {
       cancelAnimationFrame(pageScrollLockRef.current)
     }
 
-    pageScrollLockRef.current = requestAnimationFrame(() => {
-      pageScrollLockRef.current = null
+    let frameCount = 0
 
+    function restoreScrollPosition() {
       if (window.scrollX !== scrollX || window.scrollY !== scrollY) {
         window.scrollTo(scrollX, scrollY)
       }
-    })
+
+      frameCount += 1
+
+      if (frameCount < 2) {
+        pageScrollLockRef.current = requestAnimationFrame(restoreScrollPosition)
+        return
+      }
+
+      pageScrollLockRef.current = null
+    }
+
+    pageScrollLockRef.current = requestAnimationFrame(restoreScrollPosition)
   }
 
   function scheduleCrispRedraw() {
@@ -493,6 +505,7 @@ export default function JourneyGlobe({ posts }) {
 
     dragRef.current = null
     pinchRef.current = null
+    shellScrollDragRef.current = null
     pointerRefs.current.clear()
 
     if (hadGesture) {
@@ -646,6 +659,7 @@ export default function JourneyGlobe({ posts }) {
 
     dragRef.current = null
     pinchRef.current = null
+    shellScrollDragRef.current = null
     pointerRefs.current.clear()
     setIsDragging(false)
   }
@@ -664,6 +678,7 @@ export default function JourneyGlobe({ posts }) {
       startZoom: zoomRef.current,
     }
     dragRef.current = null
+    shellScrollDragRef.current = null
     setIsDragging(false)
 
     return true
@@ -695,6 +710,11 @@ export default function JourneyGlobe({ posts }) {
     }
 
     if (event.pointerType === 'touch' && zoomRef.current.scale <= MIN_ZOOM) {
+      shellScrollDragRef.current = {
+        pointerId: event.pointerId,
+        startClientX: event.clientX,
+        startScrollLeft: stageShellRef.current?.scrollLeft || 0,
+      }
       return
     }
 
@@ -754,6 +774,25 @@ export default function JourneyGlobe({ posts }) {
       return
     }
 
+    const shellScrollDrag = shellScrollDragRef.current
+
+    if (
+      shellScrollDrag &&
+      event.pointerType === 'touch' &&
+      shellScrollDrag.pointerId === event.pointerId
+    ) {
+      const shell = stageShellRef.current
+
+      if (shell) {
+        event.preventDefault()
+        shell.scrollLeft =
+          shellScrollDrag.startScrollLeft -
+          (event.clientX - shellScrollDrag.startClientX)
+      }
+
+      return
+    }
+
     const drag = dragRef.current
 
     if (!drag) {
@@ -791,6 +830,7 @@ export default function JourneyGlobe({ posts }) {
       pinchRef.current = null
     }
 
+    shellScrollDragRef.current = null
     dragRef.current = null
     setIsDragging(false)
     flushZoomState()

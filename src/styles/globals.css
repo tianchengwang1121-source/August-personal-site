@@ -511,7 +511,7 @@ p {
 }
 
 .journey-map-surface {
-  fill: url('#journeyMapSurface');
+  fill: transparent;
 }
 
 .journey-map-dotfield {
