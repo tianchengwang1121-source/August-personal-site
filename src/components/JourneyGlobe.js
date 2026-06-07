@@ -19,6 +19,7 @@ const MAX_ZOOM = 5.4
 const WHEEL_SENSITIVITY = 0.0026
 const PINCH_WHEEL_SENSITIVITY = 0.004
 const MAX_WHEEL_DELTA = 92
+const TRACKPAD_SCROLL_DELTA = 82
 const ZOOM_SYNC_DELAY = 180
 const REDRAW_IDLE_DELAY = 160
 const DEFAULT_ZOOM = { scale: 1, x: 0, y: 0 }
@@ -117,6 +118,25 @@ function getWheelDelta(event) {
     x: event.deltaX * deltaMultiplier,
     y: event.deltaY * deltaMultiplier,
   }
+}
+
+function shouldWheelZoom(event, delta) {
+  if (event.ctrlKey) {
+    return true
+  }
+
+  if (event.deltaMode !== 0) {
+    return true
+  }
+
+  const absX = Math.abs(delta.x)
+  const absY = Math.abs(delta.y)
+
+  if (absX > 0 || absY < TRACKPAD_SCROLL_DELTA || !Number.isInteger(event.deltaY)) {
+    return false
+  }
+
+  return true
 }
 
 function getPinchMetrics(pointers, rect) {
@@ -492,6 +512,10 @@ export default function JourneyGlobe({ posts }) {
     }
 
     const delta = getWheelDelta(event)
+
+    if (!shouldWheelZoom(event, delta)) {
+      return
+    }
 
     event.preventDefault()
     event.stopPropagation()
