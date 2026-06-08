@@ -7,6 +7,18 @@ export function getWheelDelta(event) {
   }
 }
 
+export function getPageScrollFreezeStyles({ scrollX, scrollY }) {
+  return {
+    position: 'fixed',
+    top: `-${scrollY}px`,
+    left: `-${scrollX}px`,
+    right: '0',
+    width: '100%',
+    overflow: 'hidden',
+    overscrollBehavior: 'none',
+  }
+}
+
 export function getWheelScrollLockState(
   currentState,
   { scrollX, scrollY, now, duration }
