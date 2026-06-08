@@ -19,6 +19,7 @@ const MAX_ZOOM = 5.4
 const WHEEL_SENSITIVITY = 0.0026
 const PINCH_WHEEL_SENSITIVITY = 0.004
 const MAX_WHEEL_DELTA = 92
+const WHEEL_ZOOM_SESSION_MS = 180
 const ZOOM_SYNC_DELAY = 180
 const REDRAW_IDLE_DELAY = 160
 const DEFAULT_ZOOM = { scale: 1, x: 0, y: 0 }
@@ -121,28 +122,33 @@ function getWheelDelta(event) {
   }
 }
 
-function shouldWheelZoom(event, delta) {
-  if (event.ctrlKey) {
-    return true
-  }
-
-  if (event.deltaMode !== 0) {
-    return true
-  }
-
+function getWheelZoomMode(event, delta, isMouseWheelSessionActive = false) {
   const absX = Math.abs(delta.x)
   const wheelDelta = Math.abs(event.wheelDelta || event.webkitWheelDelta || 0)
   const absDeltaY = Math.abs(event.deltaY)
 
   if (absX > 0) {
-    return false
+    return null
+  }
+
+  if (event.ctrlKey) {
+    return 'pinch'
+  }
+
+  if (event.deltaMode !== 0) {
+    return 'mouse'
   }
 
   if (wheelDelta) {
-    return Number.isInteger(event.deltaY) && wheelDelta >= 100 && absDeltaY >= 12
+    const isMouseWheel =
+      Number.isInteger(event.deltaY) && wheelDelta >= 100 && absDeltaY >= 12
+    const isMouseWheelTail =
+      isMouseWheelSessionActive && Number.isInteger(event.deltaY) && absDeltaY > 0
+
+    return isMouseWheel || isMouseWheelTail ? 'mouse' : null
   }
 
-  return Number.isInteger(event.deltaY) && absDeltaY >= 40
+  return Number.isInteger(event.deltaY) && absDeltaY >= 40 ? 'mouse' : null
 }
 
 function getPinchMetrics(pointers, rect) {
@@ -227,6 +233,7 @@ export default function JourneyGlobe({ posts }) {
   const shellScrollDragRef = useRef(null)
   const setZoomSmoothRef = useRef(null)
   const visualZoomRef = useRef(DEFAULT_ZOOM)
+  const wheelZoomSessionUntilRef = useRef(0)
   const zoomRef = useRef(DEFAULT_ZOOM)
   const zoomFrameRef = useRef(null)
   const shouldRenderAfterFrameRef = useRef(false)
@@ -337,28 +344,25 @@ export default function JourneyGlobe({ posts }) {
     }
   }
 
-  function lockPageScrollForWheel() {
+  function lockPageScrollForWheel(duration = WHEEL_ZOOM_SESSION_MS) {
     if (typeof window === 'undefined') {
       return
     }
 
     const scrollX = window.scrollX
     const scrollY = window.scrollY
+    const lockUntil = performance.now() + duration
 
     if (pageScrollLockRef.current) {
       cancelAnimationFrame(pageScrollLockRef.current)
     }
-
-    let frameCount = 0
 
     function restoreScrollPosition() {
       if (window.scrollX !== scrollX || window.scrollY !== scrollY) {
         window.scrollTo(scrollX, scrollY)
       }
 
-      frameCount += 1
-
-      if (frameCount < 2) {
+      if (performance.now() < lockUntil) {
         pageScrollLockRef.current = requestAnimationFrame(restoreScrollPosition)
         return
       }
@@ -539,8 +543,13 @@ export default function JourneyGlobe({ posts }) {
     }
 
     const delta = getWheelDelta(event)
+    const wheelZoomMode = getWheelZoomMode(
+      event,
+      delta,
+      performance.now() < wheelZoomSessionUntilRef.current
+    )
 
-    if (!shouldWheelZoom(event, delta)) {
+    if (!wheelZoomMode) {
       return
     }
 
@@ -548,6 +557,10 @@ export default function JourneyGlobe({ posts }) {
     event.stopPropagation()
     event.stopImmediatePropagation?.()
     lockPageScrollForWheel()
+
+    if (wheelZoomMode === 'mouse') {
+      wheelZoomSessionUntilRef.current = performance.now() + WHEEL_ZOOM_SESSION_MS
+    }
 
     resetPointerGestureRef.current?.()
 
