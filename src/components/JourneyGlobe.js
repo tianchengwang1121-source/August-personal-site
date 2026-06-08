@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { geoEquirectangular, geoGraticule, geoPath } from 'd3-geo'
 import { feature, mesh } from 'topojson-client'
+import { getWheelDelta, getWheelZoomMode } from './journeyWheel.mjs'
 import chinaProvinces from '../data/china-provinces.json'
 import worldAtlas from 'world-atlas/countries-10m.json'
 
@@ -111,46 +112,6 @@ function getViewboxPoint(clientX, clientY, rect) {
 
 function getPointerDistance(first, second) {
   return Math.hypot(first.clientX - second.clientX, first.clientY - second.clientY)
-}
-
-function getWheelDelta(event) {
-  const deltaMultiplier = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? 100 : 1
-
-  return {
-    x: event.deltaX * deltaMultiplier,
-    y: event.deltaY * deltaMultiplier,
-  }
-}
-
-function getWheelZoomMode(event, delta, isMouseWheelSessionActive = false) {
-  const absX = Math.abs(delta.x)
-  const wheelDelta = Math.abs(event.wheelDelta || event.webkitWheelDelta || 0)
-  const absDeltaY = Math.abs(event.deltaY)
-
-  if (absX > 0) {
-    return null
-  }
-
-  if (event.ctrlKey) {
-    return 'pinch'
-  }
-
-  if (isMouseWheelSessionActive && absDeltaY > 0) {
-    return 'mouse'
-  }
-
-  if (event.deltaMode !== 0) {
-    return 'mouse'
-  }
-
-  if (wheelDelta) {
-    const isMouseWheel =
-      Number.isInteger(event.deltaY) && wheelDelta >= 80 && absDeltaY >= 1
-
-    return isMouseWheel ? 'mouse' : null
-  }
-
-  return Number.isInteger(event.deltaY) && absDeltaY >= 40 ? 'mouse' : null
 }
 
 function getPinchMetrics(pointers, rect) {
