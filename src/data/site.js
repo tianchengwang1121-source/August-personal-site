@@ -116,7 +116,7 @@ export const blogPosts = [
           },
           {
             type: 'paragraph',
-            text: '在机场过夜，对体能的消耗是巨大的。幸好，飞往新加坡的早班机上座率并不高，在机上美美地睡了一觉，睁眼便已经来到了马六甲海峡上空。我的新加坡之旅就要开始啦！',
+            text: '在机场过夜，真的是很累很累。幸好，飞往新加坡的早班机上座率并不高，在机上美美地睡了一觉，睁眼便已经来到了马六甲海峡上空。我的新加坡🇸🇬之旅就要开始啦！',
           },
           {
             type: 'image',
@@ -135,7 +135,7 @@ export const blogPosts = [
         blocks: [
           {
             type: 'media',
-            text: '落地新加坡，先来到Chinatown体验一下特色的南洋美食，',
+            text: '落地新加坡，先来到Chinatown体验一下特色的南洋美食：福建炒面。随后去了新加坡国家博物馆，在这里，深入了解新加坡是如何从弹丸之地，发展成为一个具有世界影响力的港口城市，这里的开放、包容令我印象深刻。',
             image: {
               src: '/images/blog/singapore-airshow/5.jpg',
               alt: '福建炒面（7新币，中规中矩）',
@@ -143,6 +143,61 @@ export const blogPosts = [
               width: 1200,
               height: 1600,
             },
+          },
+          {
+            type: 'paragraph',
+            text: '博物馆里有很多来参观的本地中小学生，我作为游客，也偷听了一些讲解员的讲述内容。令我惊讶的是，这里的每一个讲解员，都有广泛的知识积累，讲述的内容跨度广，且十分深刻，外加上全英的语言背景，不得不佩服新加坡基础教育的完善。',
+          },
+          {
+            type: 'gallery',
+            variant: 'compact',
+            images: [
+              {
+                src: '/images/blog/singapore-airshow/6.jpg',
+                alt: '博物馆里巨大的新加坡国旗🇸🇬',
+                caption: '博物馆里巨大的新加坡国旗🇸🇬',
+                width: 1200,
+                height: 1600,
+              },
+              {
+                src: '/images/blog/singapore-airshow/7.jpg',
+                alt: '新加坡人在全球化中“Making Waves”',
+                caption: '新加坡人在全球化中“Making Waves”',
+                width: 1200,
+                height: 1600,
+              },
+              {
+                src: '/images/blog/singapore-airshow/8.jpg',
+                alt: '路过新加坡管理大学（比PolyU还要小😂）',
+                caption: '路过新加坡管理大学（比PolyU还要小😂）',
+                width: 1200,
+                height: 1600,
+              },
+            ],
+          },
+          {
+            type: 'paragraph',
+            text: '前往NTU的途中，路过了组屋。作为新加坡出名的住房制度，80%的公民都住在组屋内，组屋制的成功，保障了新加坡的社会发展与经济稳定。对比香港的公屋，组屋保障了更多居民的住房问题，而香港的住房体系则更加割裂。',
+          },
+          {
+            type: 'gallery',
+            variant: 'compact',
+            images: [
+              {
+                src: '/images/blog/singapore-airshow/9.jpg',
+                alt: '组屋的小区内部',
+                caption: '组屋的小区内部',
+                width: 1200,
+                height: 1600,
+              },
+              {
+                src: '/images/blog/singapore-airshow/10.jpg',
+                alt: '组屋内部的托管班，看上去干净整洁',
+                caption: '组屋内部的托管班，看上去干净整洁',
+                width: 1200,
+                height: 1600,
+              },
+            ],
           },
         ],
       },
