@@ -139,10 +139,16 @@ function shouldWheelZoom(event, delta) {
   }
 
   if (wheelDelta) {
-    return wheelDelta % 120 === 0 || Number.isInteger(event.deltaY)
+    return (
+      (wheelDelta % 120 === 0 && absDeltaY >= 40) ||
+      (Math.abs(wheelDelta - absDeltaY) <= 1 &&
+        Number.isInteger(event.deltaY) &&
+        absDeltaY >= 80 &&
+        absDeltaY % 10 === 0)
+    )
   }
 
-  return Number.isInteger(event.deltaY) && absDeltaY >= 40
+  return Number.isInteger(event.deltaY) && absDeltaY >= 80 && absDeltaY % 10 === 0
 }
 
 function getPinchMetrics(pointers, rect) {
@@ -436,6 +442,13 @@ export default function JourneyGlobe({ posts }) {
     setZoom(zoomRef.current)
   }
 
+  function prepareZoomGesture() {
+    cancelZoomFrame()
+    visualZoomRef.current = zoomRef.current
+    clearRedrawTimer()
+    applyZoomToDomRef.current?.(zoomRef.current)
+  }
+
   function setZoomSmooth(nextZoom, options = {}) {
     zoomRef.current = nextZoom
 
@@ -673,8 +686,8 @@ export default function JourneyGlobe({ posts }) {
 
     pinchRef.current = {
       focus: pinch.focus,
-      startDistance: pinch.distance,
-      startZoom: zoomRef.current,
+      lastDistance: pinch.distance,
+      lastFocus: pinch.focus,
     }
     dragRef.current = null
     shellScrollDragRef.current = null
@@ -696,7 +709,7 @@ export default function JourneyGlobe({ posts }) {
     event.preventDefault()
     clearHideTimer()
     setActiveKey(null)
-    flushZoomState()
+    prepareZoomGesture()
     pointerRefs.current.set(event.pointerId, {
       clientX: event.clientX,
       clientY: event.clientY,
@@ -752,14 +765,15 @@ export default function JourneyGlobe({ posts }) {
         return
       }
 
-      const current = pinchRef.current.startZoom
+      const current = zoomRef.current
+      const lastDistance = pinchRef.current.lastDistance || pinch.distance
       const nextScale = clamp(
-        current.scale * (pinch.distance / pinchRef.current.startDistance),
+        current.scale * (pinch.distance / lastDistance),
         MIN_ZOOM,
         MAX_ZOOM
       )
       const ratio = nextScale / current.scale
-      const focus = pinchRef.current.focus
+      const focus = pinch.focus
 
       setZoomSmooth(
         clampZoomTransform({
@@ -769,6 +783,9 @@ export default function JourneyGlobe({ posts }) {
         }),
         { sync: false }
       )
+
+      pinchRef.current.lastDistance = pinch.distance
+      pinchRef.current.lastFocus = pinch.focus
 
       return
     }
