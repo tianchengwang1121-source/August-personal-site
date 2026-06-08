@@ -8,6 +8,20 @@ const siteSource = readFileSync(
   join(projectRoot, 'src/data/site.js'),
   'utf8'
 )
+const cssSource = readFileSync(
+  join(projectRoot, 'src/styles/globals.css'),
+  'utf8'
+)
+
+assert.ok(
+  siteSource.includes("layout: 'arrival'"),
+  'Singapore arrival section should use the wider arrival layout'
+)
+
+assert.ok(
+  cssSource.includes('.blog-story-section--arrival .blog-image-grid'),
+  'Singapore arrival layout should define wider gallery rules'
+)
 
 const expectedSingaporeText = [
   '落地新加坡，先来到Chinatown体验一下特色的南洋美食：福建炒面。随后去了新加坡国家博物馆，在这里，深入了解新加坡是如何从弹丸之地，发展成为一个具有世界影响力的港口城市，这里的开放、包容令我印象深刻。',

@@ -131,6 +131,7 @@ export const blogPosts = [
       },
       {
         type: 'section',
+        layout: 'arrival',
         title: '新加坡初印象',
         blocks: [
           {
