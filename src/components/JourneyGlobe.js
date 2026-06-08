@@ -19,7 +19,7 @@ const MAX_ZOOM = 5.4
 const WHEEL_SENSITIVITY = 0.0026
 const PINCH_WHEEL_SENSITIVITY = 0.004
 const MAX_WHEEL_DELTA = 92
-const WHEEL_ZOOM_SESSION_MS = 180
+const WHEEL_ZOOM_SESSION_MS = 420
 const ZOOM_SYNC_DELAY = 180
 const REDRAW_IDLE_DELAY = 160
 const DEFAULT_ZOOM = { scale: 1, x: 0, y: 0 }
@@ -131,6 +131,10 @@ function getWheelZoomMode(event, delta, isMouseWheelSessionActive = false) {
     return null
   }
 
+  if (isMouseWheelSessionActive && absDeltaY > 0) {
+    return 'mouse'
+  }
+
   if (event.ctrlKey) {
     return 'pinch'
   }
@@ -141,11 +145,9 @@ function getWheelZoomMode(event, delta, isMouseWheelSessionActive = false) {
 
   if (wheelDelta) {
     const isMouseWheel =
-      Number.isInteger(event.deltaY) && wheelDelta >= 100 && absDeltaY >= 12
-    const isMouseWheelTail =
-      isMouseWheelSessionActive && Number.isInteger(event.deltaY) && absDeltaY > 0
+      Number.isInteger(event.deltaY) && wheelDelta >= 80 && absDeltaY >= 1
 
-    return isMouseWheel || isMouseWheelTail ? 'mouse' : null
+    return isMouseWheel ? 'mouse' : null
   }
 
   return Number.isInteger(event.deltaY) && absDeltaY >= 40 ? 'mouse' : null
