@@ -139,16 +139,10 @@ function shouldWheelZoom(event, delta) {
   }
 
   if (wheelDelta) {
-    return (
-      (wheelDelta % 120 === 0 && absDeltaY >= 40) ||
-      (Math.abs(wheelDelta - absDeltaY) <= 1 &&
-        Number.isInteger(event.deltaY) &&
-        absDeltaY >= 80 &&
-        absDeltaY % 10 === 0)
-    )
+    return Number.isInteger(event.deltaY) && wheelDelta >= 100 && absDeltaY >= 12
   }
 
-  return Number.isInteger(event.deltaY) && absDeltaY >= 80 && absDeltaY % 10 === 0
+  return Number.isInteger(event.deltaY) && absDeltaY >= 40
 }
 
 function getPinchMetrics(pointers, rect) {
