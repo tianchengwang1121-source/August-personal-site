@@ -965,13 +965,6 @@ export default function JourneyGlobe({ posts }) {
                   </g>
                 </g>
               </g>
-              <rect
-                className="journey-map-outline"
-                height={MAP_HEIGHT}
-                width={MAP_WIDTH}
-                x={MAP_X}
-                y={MAP_Y}
-              />
             </svg>
 
             {activeMarker && activeCard && (
