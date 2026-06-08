@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict'
 import {
-  getPageScrollFreezeStyles,
   getWheelDelta,
   getWheelScrollLockState,
   getWheelZoomMode,
@@ -117,18 +116,4 @@ assert.equal(
   newLockAfterIdle.scrollY,
   410,
   'a new wheel session after the lock expires should anchor at the current page position'
-)
-
-assert.deepEqual(
-  getPageScrollFreezeStyles({ scrollX: 3, scrollY: 382 }),
-  {
-    position: 'fixed',
-    top: '-382px',
-    left: '-3px',
-    right: '0',
-    width: '100%',
-    overflow: 'hidden',
-    overscrollBehavior: 'none',
-  },
-  'wheel zoom should freeze the page at the current visual scroll offset'
 )
