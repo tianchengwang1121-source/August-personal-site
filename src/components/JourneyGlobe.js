@@ -131,12 +131,12 @@ function getWheelZoomMode(event, delta, isMouseWheelSessionActive = false) {
     return null
   }
 
-  if (isMouseWheelSessionActive && absDeltaY > 0) {
-    return 'mouse'
-  }
-
   if (event.ctrlKey) {
     return 'pinch'
+  }
+
+  if (isMouseWheelSessionActive && absDeltaY > 0) {
+    return 'mouse'
   }
 
   if (event.deltaMode !== 0) {
@@ -599,17 +599,17 @@ export default function JourneyGlobe({ posts }) {
       return undefined
     }
 
-    function handleDocumentWheel(event) {
+    function handleStageWheel(event) {
       handleMapWheelRef.current?.(event)
     }
 
-    document.addEventListener('wheel', handleDocumentWheel, {
+    stage.addEventListener('wheel', handleStageWheel, {
       capture: true,
       passive: false,
     })
 
     return () => {
-      document.removeEventListener('wheel', handleDocumentWheel, true)
+      stage.removeEventListener('wheel', handleStageWheel, true)
     }
   }, [])
 

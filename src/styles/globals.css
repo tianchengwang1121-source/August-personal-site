@@ -1017,9 +1017,10 @@ p {
 .blog-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
-  max-width: 1040px;
-  margin: 0 auto;
+  gap: 16px;
+  width: 100%;
+  max-width: none;
+  margin: -8px 0 0;
 }
 
 .blog-card {
@@ -1043,7 +1044,7 @@ p {
 .blog-card-image {
   position: relative;
   overflow: hidden;
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 16 / 8.6;
   border-bottom: 1px solid var(--line);
   background: var(--surface-muted);
 }
@@ -1062,12 +1063,12 @@ p {
 }
 
 .blog-card-content {
-  padding: 18px;
+  padding: 16px;
 }
 
 .blog-card-content h2 {
-  margin: 12px 0 8px;
-  font-size: clamp(1.16rem, 2vw, 1.45rem);
+  margin: 10px 0 8px;
+  font-size: clamp(1.08rem, 1.7vw, 1.34rem);
 }
 
 .blog-detail {
