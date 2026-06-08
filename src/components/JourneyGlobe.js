@@ -144,10 +144,13 @@ function getWheelZoomMode(event, delta, isMouseWheelSessionActive = false) {
   }
 
   if (wheelDelta) {
-    return Number.isInteger(event.deltaY) && absDeltaY > 0 ? 'mouse' : null
+    const isMouseWheel =
+      Number.isInteger(event.deltaY) && wheelDelta >= 80 && absDeltaY >= 1
+
+    return isMouseWheel ? 'mouse' : null
   }
 
-  return Number.isInteger(event.deltaY) && absDeltaY > 0 ? 'mouse' : null
+  return Number.isInteger(event.deltaY) && absDeltaY >= 40 ? 'mouse' : null
 }
 
 function getPinchMetrics(pointers, rect) {
@@ -524,10 +527,6 @@ export default function JourneyGlobe({ posts }) {
   resetPointerGestureRef.current = resetPointerGesture
 
   function handleMapWheel(event) {
-    if (event.__journeyMapWheelHandled) {
-      return
-    }
-
     const stage = stageRef.current
 
     if (!stage) {
@@ -556,7 +555,6 @@ export default function JourneyGlobe({ posts }) {
       return
     }
 
-    event.__journeyMapWheelHandled = true
     event.preventDefault()
     event.stopPropagation()
     event.stopImmediatePropagation?.()
@@ -593,10 +591,6 @@ export default function JourneyGlobe({ posts }) {
     )
   }
   handleMapWheelRef.current = handleMapWheel
-
-  function handleReactWheelCapture(event) {
-    handleMapWheel(event.nativeEvent || event)
-  }
 
   useEffect(() => {
     const stage = stageRef.current
@@ -890,7 +884,6 @@ export default function JourneyGlobe({ posts }) {
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerEnd}
-          onWheelCapture={handleReactWheelCapture}
           ref={stageRef}
         >
           <div
