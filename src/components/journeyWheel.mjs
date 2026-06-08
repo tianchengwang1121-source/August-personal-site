@@ -7,6 +7,27 @@ export function getWheelDelta(event) {
   }
 }
 
+export function getWheelScrollLockState(
+  currentState,
+  { scrollX, scrollY, now, duration }
+) {
+  const lockUntil = now + duration
+
+  if (!currentState || now > currentState.lockUntil) {
+    return {
+      scrollX,
+      scrollY,
+      lockUntil,
+    }
+  }
+
+  return {
+    scrollX: currentState.scrollX,
+    scrollY: currentState.scrollY,
+    lockUntil: Math.max(currentState.lockUntil, lockUntil),
+  }
+}
+
 function isVerticalWheelIntent(delta) {
   const absX = Math.abs(delta.x)
   const absY = Math.abs(delta.y)

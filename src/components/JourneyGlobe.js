@@ -3,7 +3,11 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { geoEquirectangular, geoGraticule, geoPath } from 'd3-geo'
 import { feature, mesh } from 'topojson-client'
-import { getWheelDelta, getWheelZoomMode } from './journeyWheel.mjs'
+import {
+  getWheelDelta,
+  getWheelScrollLockState,
+  getWheelZoomMode,
+} from './journeyWheel.mjs'
 import chinaProvinces from '../data/china-provinces.json'
 import worldAtlas from 'world-atlas/countries-10m.json'
 
@@ -312,28 +316,39 @@ export default function JourneyGlobe({ posts }) {
       return
     }
 
-    const scrollX = window.scrollX
-    const scrollY = window.scrollY
-    const lockUntil = performance.now() + duration
+    const nextLock = getWheelScrollLockState(pageScrollLockRef.current, {
+      duration,
+      now: performance.now(),
+      scrollX: window.scrollX,
+      scrollY: window.scrollY,
+    })
 
-    if (pageScrollLockRef.current) {
-      cancelAnimationFrame(pageScrollLockRef.current)
+    if (pageScrollLockRef.current?.frame) {
+      cancelAnimationFrame(pageScrollLockRef.current.frame)
     }
 
     function restoreScrollPosition() {
-      if (window.scrollX !== scrollX || window.scrollY !== scrollY) {
-        window.scrollTo(scrollX, scrollY)
+      const lock = pageScrollLockRef.current
+
+      if (!lock) {
+        return
       }
 
-      if (performance.now() < lockUntil) {
-        pageScrollLockRef.current = requestAnimationFrame(restoreScrollPosition)
+      if (window.scrollX !== lock.scrollX || window.scrollY !== lock.scrollY) {
+        window.scrollTo(lock.scrollX, lock.scrollY)
+      }
+
+      if (performance.now() < lock.lockUntil) {
+        lock.frame = requestAnimationFrame(restoreScrollPosition)
+        pageScrollLockRef.current = lock
         return
       }
 
       pageScrollLockRef.current = null
     }
 
-    pageScrollLockRef.current = requestAnimationFrame(restoreScrollPosition)
+    nextLock.frame = requestAnimationFrame(restoreScrollPosition)
+    pageScrollLockRef.current = nextLock
   }
 
   function scheduleCrispRedraw() {
@@ -427,8 +442,9 @@ export default function JourneyGlobe({ posts }) {
       cancelZoomFrame()
       clearRedrawTimer()
 
-      if (pageScrollLockRef.current) {
-        cancelAnimationFrame(pageScrollLockRef.current)
+      if (pageScrollLockRef.current?.frame) {
+        cancelAnimationFrame(pageScrollLockRef.current.frame)
+        pageScrollLockRef.current = null
       }
 
       if (syncTimerRef.current) {
