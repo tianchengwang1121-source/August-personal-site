@@ -9,7 +9,6 @@ import worldAtlas from 'world-atlas/countries-10m.json'
 const VIEWBOX_WIDTH = 960
 const VIEWBOX_HEIGHT = 480
 const MAP_PADDING = 0
-const MAP_RADIUS = 24
 const MAP_X = MAP_PADDING
 const MAP_Y = MAP_PADDING
 const MAP_WIDTH = VIEWBOX_WIDTH - MAP_PADDING * 2
@@ -871,11 +870,6 @@ export default function JourneyGlobe({ posts }) {
               viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
             >
               <defs>
-                <linearGradient id="journeyMapSurface" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#ffffff" />
-                  <stop offset="72%" stopColor="#f8f9fa" />
-                  <stop offset="100%" stopColor="#f1f2f4" />
-                </linearGradient>
                 <linearGradient id="journeyMapLand" x1="0%" y1="0%" x2="0%" y2="100%">
                   <stop offset="0%" stopColor="#f8f9fa" />
                   <stop offset="100%" stopColor="#f1f2f4" />
@@ -891,21 +885,12 @@ export default function JourneyGlobe({ posts }) {
                 <clipPath id="journeyMapClip">
                   <rect
                     height={MAP_HEIGHT}
-                    rx={MAP_RADIUS}
                     width={MAP_WIDTH}
                     x={MAP_X}
                     y={MAP_Y}
                   />
                 </clipPath>
               </defs>
-              <rect
-                className="journey-map-surface"
-                height={MAP_HEIGHT}
-                rx={MAP_RADIUS}
-                width={MAP_WIDTH}
-                x={MAP_X}
-                y={MAP_Y}
-              />
               <g clipPath="url(#journeyMapClip)">
                 <rect
                   className="journey-map-dotfield"
@@ -966,7 +951,6 @@ export default function JourneyGlobe({ posts }) {
               <rect
                 className="journey-map-outline"
                 height={MAP_HEIGHT}
-                rx={MAP_RADIUS}
                 width={MAP_WIDTH}
                 x={MAP_X}
                 y={MAP_Y}
