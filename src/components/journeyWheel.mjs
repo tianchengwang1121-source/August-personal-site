@@ -21,6 +21,12 @@ export function getPageScrollFreezeStyles({ scrollX, scrollY }) {
   }
 }
 
+export function getWheelLockExitAction({ hasScrollLock, isInsideStage }) {
+  return hasScrollLock && !isInsideStage
+    ? 'release-scroll-lock'
+    : 'keep-scroll-lock'
+}
+
 export function getWheelScrollLockState(
   currentState,
   { scrollX, scrollY, now, duration }

@@ -5,6 +5,7 @@ import {
   getWheelBoundaryAction,
   getWheelDelta,
   getWheelInputKind,
+  getWheelLockExitAction,
   getWheelScrollLockState,
   getWheelZoomMode,
 } from '../src/components/journeyWheel.mjs'
@@ -196,6 +197,24 @@ assert.deepEqual(
     overscrollBehavior: 'none',
   },
   'mouse wheel zoom should freeze the page at the current visual scroll offset'
+)
+
+assert.equal(
+  getWheelLockExitAction({ hasScrollLock: true, isInsideStage: false }),
+  'release-scroll-lock',
+  'wheel input outside the map after mouse wheel zoom should immediately restore page scrolling'
+)
+
+assert.equal(
+  getWheelLockExitAction({ hasScrollLock: true, isInsideStage: true }),
+  'keep-scroll-lock',
+  'wheel input still inside the map should keep the wheel zoom scroll lock'
+)
+
+assert.equal(
+  getWheelLockExitAction({ hasScrollLock: false, isInsideStage: false }),
+  'keep-scroll-lock',
+  'leaving the map without an active wheel scroll lock should not change page scrolling'
 )
 
 assert.equal(

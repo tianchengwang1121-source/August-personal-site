@@ -9,6 +9,7 @@ import {
   getWheelBoundaryAction,
   getWheelDelta,
   getWheelInputKind,
+  getWheelLockExitAction,
   getWheelScrollLockState,
   getWheelZoomMode,
 } from './journeyWheel.mjs'
@@ -198,6 +199,7 @@ export default function JourneyGlobe({ posts }) {
   const pointerRefs = useRef(new Map())
   const pageScrollLockRef = useRef(null)
   const handleMapWheelRef = useRef(null)
+  const releaseWheelLockOnStageExitRef = useRef(null)
   const redrawTimerRef = useRef(null)
   const resetPointerGestureRef = useRef(null)
   const syncTimerRef = useRef(null)
@@ -638,6 +640,32 @@ export default function JourneyGlobe({ posts }) {
   }
   handleMapWheelRef.current = handleMapWheel
 
+  function isWheelEventInsideStage(event, stage) {
+    const rect = stage.getBoundingClientRect()
+
+    return (
+      event.clientX >= rect.left &&
+      event.clientX <= rect.right &&
+      event.clientY >= rect.top &&
+      event.clientY <= rect.bottom
+    )
+  }
+
+  function releaseWheelLockOnStageExit(isInsideStage = false) {
+    const exitAction = getWheelLockExitAction({
+      hasScrollLock: Boolean(pageScrollLockRef.current),
+      isInsideStage,
+    })
+
+    if (exitAction !== 'release-scroll-lock') {
+      return
+    }
+
+    releasePageScrollLock()
+    wheelZoomSessionUntilRef.current = 0
+  }
+  releaseWheelLockOnStageExitRef.current = releaseWheelLockOnStageExit
+
   useEffect(() => {
     const stage = stageRef.current
 
@@ -649,13 +677,36 @@ export default function JourneyGlobe({ posts }) {
       handleMapWheelRef.current?.(event)
     }
 
+    function handleStageExit() {
+      releaseWheelLockOnStageExitRef.current?.()
+    }
+
+    function handleWindowWheel(event) {
+      if (!pageScrollLockRef.current) {
+        return
+      }
+
+      releaseWheelLockOnStageExitRef.current?.(
+        isWheelEventInsideStage(event, stage)
+      )
+    }
+
     stage.addEventListener('wheel', handleStageWheel, {
       capture: true,
       passive: false,
     })
+    stage.addEventListener('pointerleave', handleStageExit)
+    stage.addEventListener('mouseleave', handleStageExit)
+    window.addEventListener('wheel', handleWindowWheel, {
+      capture: true,
+      passive: true,
+    })
 
     return () => {
       stage.removeEventListener('wheel', handleStageWheel, true)
+      stage.removeEventListener('pointerleave', handleStageExit)
+      stage.removeEventListener('mouseleave', handleStageExit)
+      window.removeEventListener('wheel', handleWindowWheel, true)
     }
   }, [])
 
