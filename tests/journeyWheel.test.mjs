@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import {
   getPageScrollFreezeStyles,
+  getWheelBoundaryAction,
   getWheelDelta,
   getWheelInputKind,
   getWheelScrollLockState,
@@ -189,4 +190,40 @@ assert.deepEqual(
     overscrollBehavior: 'none',
   },
   'mouse wheel zoom should freeze the page at the current visual scroll offset'
+)
+
+assert.equal(
+  getWheelBoundaryAction({
+    inputKind: 'mouse-wheel',
+    scale: 1,
+    minZoom: 1,
+    maxZoom: 5.4,
+    deltaY: 80,
+  }),
+  'page-scroll',
+  'mouse wheel zoom-out at minimum map zoom should hand control back to page scrolling'
+)
+
+assert.equal(
+  getWheelBoundaryAction({
+    inputKind: 'mouse-wheel',
+    scale: 5.4,
+    minZoom: 1,
+    maxZoom: 5.4,
+    deltaY: -80,
+  }),
+  'map-zoom',
+  'mouse wheel zoom-in at maximum map zoom should remain captured by the map'
+)
+
+assert.equal(
+  getWheelBoundaryAction({
+    inputKind: 'trackpad-pinch',
+    scale: 1,
+    minZoom: 1,
+    maxZoom: 5.4,
+    deltaY: 80,
+  }),
+  'map-zoom',
+  'trackpad pinch should stay a map zoom gesture at zoom limits'
 )

@@ -86,6 +86,24 @@ export function getWheelInputKind(
   return 'trackpad-scroll'
 }
 
+export function getWheelBoundaryAction({
+  inputKind,
+  scale,
+  minZoom,
+  maxZoom,
+  deltaY,
+}) {
+  if (inputKind === 'mouse-wheel' && scale <= minZoom && deltaY > 0) {
+    return 'page-scroll'
+  }
+
+  if (inputKind === 'mouse-wheel' && scale >= maxZoom && deltaY < 0) {
+    return 'map-zoom'
+  }
+
+  return 'map-zoom'
+}
+
 export function getWheelZoomMode(
   event,
   delta,

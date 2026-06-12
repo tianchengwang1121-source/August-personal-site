@@ -5,7 +5,9 @@ import { geoEquirectangular, geoGraticule, geoPath } from 'd3-geo'
 import { feature, mesh } from 'topojson-client'
 import {
   getPageScrollFreezeStyles,
+  getWheelBoundaryAction,
   getWheelDelta,
+  getWheelInputKind,
   getWheelScrollLockState,
   getWheelZoomMode,
 } from './journeyWheel.mjs'
@@ -568,13 +570,40 @@ export default function JourneyGlobe({ posts }) {
     }
 
     const delta = getWheelDelta(event)
+    const isMouseWheelSessionActive =
+      performance.now() < wheelZoomSessionUntilRef.current
+    const wheelInputKind = getWheelInputKind(
+      event,
+      delta,
+      isMouseWheelSessionActive
+    )
     const wheelZoomMode = getWheelZoomMode(
       event,
       delta,
-      performance.now() < wheelZoomSessionUntilRef.current
+      isMouseWheelSessionActive
     )
 
     if (!wheelZoomMode) {
+      return
+    }
+
+    const current = zoomRef.current
+    const deltaY = clamp(
+      delta.y,
+      -MAX_WHEEL_DELTA,
+      MAX_WHEEL_DELTA
+    )
+    const boundaryAction = getWheelBoundaryAction({
+      inputKind: wheelInputKind,
+      scale: current.scale,
+      minZoom: MIN_ZOOM,
+      maxZoom: MAX_ZOOM,
+      deltaY,
+    })
+
+    if (boundaryAction === 'page-scroll') {
+      releasePageScrollLock()
+      wheelZoomSessionUntilRef.current = 0
       return
     }
 
@@ -591,13 +620,7 @@ export default function JourneyGlobe({ posts }) {
 
     const focusX = ((event.clientX - rect.left) / rect.width) * VIEWBOX_WIDTH
     const focusY = ((event.clientY - rect.top) / rect.height) * VIEWBOX_HEIGHT
-    const deltaY = clamp(
-      delta.y,
-      -MAX_WHEEL_DELTA,
-      MAX_WHEEL_DELTA
-    )
     const sensitivity = event.ctrlKey ? PINCH_WHEEL_SENSITIVITY : WHEEL_SENSITIVITY
-    const current = zoomRef.current
     const nextScale = clamp(
       current.scale * Math.exp(-deltaY * sensitivity),
       MIN_ZOOM,
