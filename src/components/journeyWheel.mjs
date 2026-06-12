@@ -7,6 +7,18 @@ export function getWheelDelta(event) {
   }
 }
 
+export function getPageScrollFreezeStyles({ scrollX, scrollY }) {
+  return {
+    position: 'fixed',
+    top: `-${scrollY}px`,
+    left: `-${scrollX}px`,
+    right: '0',
+    width: '100%',
+    overflow: 'hidden',
+    overscrollBehavior: 'none',
+  }
+}
+
 export function getWheelScrollLockState(
   currentState,
   { scrollX, scrollY, now, duration }
@@ -35,7 +47,7 @@ function isVerticalWheelIntent(delta) {
   return absY > 0 && absY >= absX * 2
 }
 
-export function getWheelZoomMode(
+export function getWheelInputKind(
   event,
   delta,
   isMouseWheelSessionActive = false
@@ -44,27 +56,50 @@ export function getWheelZoomMode(
   const absDeltaY = Math.abs(event.deltaY)
 
   if (event.ctrlKey) {
-    return 'pinch'
+    return 'trackpad-pinch'
   }
 
   if (!isVerticalWheelIntent(delta)) {
-    return null
+    return 'trackpad-scroll'
   }
 
-  if (isMouseWheelSessionActive && absDeltaY > 0) {
-    return 'mouse'
+  if (
+    isMouseWheelSessionActive &&
+    Number.isInteger(event.deltaY) &&
+    absDeltaY >= 1 &&
+    wheelDelta >= 80
+  ) {
+    return 'mouse-wheel'
   }
 
   if (event.deltaMode !== 0) {
-    return 'mouse'
+    return 'mouse-wheel'
   }
 
   if (wheelDelta) {
     const isMouseWheel =
       Number.isInteger(event.deltaY) && wheelDelta >= 80 && absDeltaY >= 1
 
-    return isMouseWheel ? 'mouse' : null
+    return isMouseWheel ? 'mouse-wheel' : 'trackpad-scroll'
   }
 
-  return Number.isInteger(event.deltaY) && absDeltaY >= 40 ? 'mouse' : null
+  return 'trackpad-scroll'
+}
+
+export function getWheelZoomMode(
+  event,
+  delta,
+  isMouseWheelSessionActive = false
+) {
+  const inputKind = getWheelInputKind(event, delta, isMouseWheelSessionActive)
+
+  if (inputKind === 'trackpad-pinch') {
+    return 'pinch'
+  }
+
+  if (inputKind === 'mouse-wheel') {
+    return 'mouse'
+  }
+
+  return null
 }

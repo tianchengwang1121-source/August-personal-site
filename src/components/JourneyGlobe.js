@@ -4,6 +4,7 @@ import { useRouter } from 'next/router'
 import { geoEquirectangular, geoGraticule, geoPath } from 'd3-geo'
 import { feature, mesh } from 'topojson-client'
 import {
+  getPageScrollFreezeStyles,
   getWheelDelta,
   getWheelScrollLockState,
   getWheelZoomMode,
@@ -311,6 +312,69 @@ export default function JourneyGlobe({ posts }) {
     }
   }
 
+  function releasePageScrollLock() {
+    const lock = pageScrollLockRef.current
+
+    if (!lock) {
+      return
+    }
+
+    if (lock.timer) {
+      clearTimeout(lock.timer)
+    }
+
+    if (lock.frame) {
+      cancelAnimationFrame(lock.frame)
+    }
+
+    const styles = lock.styles
+
+    if (styles) {
+      Object.assign(document.body.style, styles.body)
+      document.documentElement.style.overscrollBehavior =
+        styles.documentElement.overscrollBehavior
+    }
+
+    document.documentElement.style.scrollBehavior = 'auto'
+    pageScrollLockRef.current = null
+    window.scrollTo(lock.scrollX, lock.scrollY)
+
+    if (styles) {
+      document.documentElement.style.scrollBehavior =
+        styles.documentElement.scrollBehavior
+    }
+  }
+
+  function applyPageScrollFreeze(lock) {
+    if (!lock.styles) {
+      lock.styles = {
+        body: {
+          left: document.body.style.left,
+          overflow: document.body.style.overflow,
+          overscrollBehavior: document.body.style.overscrollBehavior,
+          position: document.body.style.position,
+          right: document.body.style.right,
+          top: document.body.style.top,
+          width: document.body.style.width,
+        },
+        documentElement: {
+          overscrollBehavior: document.documentElement.style.overscrollBehavior,
+          scrollBehavior: document.documentElement.style.scrollBehavior,
+        },
+      }
+    }
+
+    Object.assign(
+      document.body.style,
+      getPageScrollFreezeStyles({
+        scrollX: lock.scrollX,
+        scrollY: lock.scrollY,
+      })
+    )
+    document.documentElement.style.overscrollBehavior = 'none'
+    document.documentElement.style.scrollBehavior = 'auto'
+  }
+
   function lockPageScrollForWheel(duration = WHEEL_ZOOM_SESSION_MS) {
     if (typeof window === 'undefined') {
       return
@@ -323,31 +387,16 @@ export default function JourneyGlobe({ posts }) {
       scrollY: window.scrollY,
     })
 
-    if (pageScrollLockRef.current?.frame) {
-      cancelAnimationFrame(pageScrollLockRef.current.frame)
+    if (pageScrollLockRef.current?.timer) {
+      clearTimeout(pageScrollLockRef.current.timer)
     }
 
-    function restoreScrollPosition() {
-      const lock = pageScrollLockRef.current
-
-      if (!lock) {
-        return
-      }
-
-      if (window.scrollX !== lock.scrollX || window.scrollY !== lock.scrollY) {
-        window.scrollTo(lock.scrollX, lock.scrollY)
-      }
-
-      if (performance.now() < lock.lockUntil) {
-        lock.frame = requestAnimationFrame(restoreScrollPosition)
-        pageScrollLockRef.current = lock
-        return
-      }
-
-      pageScrollLockRef.current = null
+    if (pageScrollLockRef.current?.styles) {
+      nextLock.styles = pageScrollLockRef.current.styles
     }
 
-    nextLock.frame = requestAnimationFrame(restoreScrollPosition)
+    applyPageScrollFreeze(nextLock)
+    nextLock.timer = setTimeout(releasePageScrollLock, duration)
     pageScrollLockRef.current = nextLock
   }
 
@@ -442,10 +491,7 @@ export default function JourneyGlobe({ posts }) {
       cancelZoomFrame()
       clearRedrawTimer()
 
-      if (pageScrollLockRef.current?.frame) {
-        cancelAnimationFrame(pageScrollLockRef.current.frame)
-        pageScrollLockRef.current = null
-      }
+      releasePageScrollLock()
 
       if (syncTimerRef.current) {
         clearTimeout(syncTimerRef.current)
