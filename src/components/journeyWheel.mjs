@@ -94,8 +94,14 @@ export function getWheelBoundaryAction({
   minZoom,
   maxZoom,
   deltaY,
+  isMouseWheelSessionActive = false,
 }) {
-  if (inputKind === 'mouse-wheel' && scale <= minZoom && deltaY > 0) {
+  if (
+    inputKind === 'mouse-wheel' &&
+    !isMouseWheelSessionActive &&
+    scale <= minZoom &&
+    deltaY > 0
+  ) {
     return 'page-scroll'
   }
 
