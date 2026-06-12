@@ -213,19 +213,6 @@ assert.equal(
 assert.equal(
   getWheelBoundaryAction({
     inputKind: 'mouse-wheel',
-    scale: 1,
-    minZoom: 1,
-    maxZoom: 5.4,
-    deltaY: 80,
-    isMouseWheelSessionActive: true,
-  }),
-  'map-zoom',
-  'mouse wheel zoom-out should stay captured while the current zoom gesture is still active'
-)
-
-assert.equal(
-  getWheelBoundaryAction({
-    inputKind: 'mouse-wheel',
     scale: 5.4,
     minZoom: 1,
     maxZoom: 5.4,

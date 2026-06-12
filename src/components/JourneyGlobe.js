@@ -599,7 +599,6 @@ export default function JourneyGlobe({ posts }) {
       minZoom: MIN_ZOOM,
       maxZoom: MAX_ZOOM,
       deltaY,
-      isMouseWheelSessionActive,
     })
 
     if (boundaryAction === 'page-scroll') {
