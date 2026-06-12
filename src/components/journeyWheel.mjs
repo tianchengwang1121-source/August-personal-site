@@ -1,3 +1,5 @@
+export const MOUSE_WHEEL_ZOOM_LOCK_MS = 1200
+
 export function getWheelDelta(event) {
   const deltaMultiplier = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? 100 : 1
 

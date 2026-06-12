@@ -1,12 +1,18 @@
 import assert from 'node:assert/strict'
 import {
   getPageScrollFreezeStyles,
+  MOUSE_WHEEL_ZOOM_LOCK_MS,
   getWheelBoundaryAction,
   getWheelDelta,
   getWheelInputKind,
   getWheelScrollLockState,
   getWheelZoomMode,
 } from '../src/components/journeyWheel.mjs'
+
+assert.ok(
+  MOUSE_WHEEL_ZOOM_LOCK_MS >= 1000,
+  'mouse wheel zoom should keep the page frozen long enough to avoid mid-gesture release flicker'
+)
 
 function wheelEvent({
   deltaX = 0,

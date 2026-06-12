@@ -5,6 +5,7 @@ import { geoEquirectangular, geoGraticule, geoPath } from 'd3-geo'
 import { feature, mesh } from 'topojson-client'
 import {
   getPageScrollFreezeStyles,
+  MOUSE_WHEEL_ZOOM_LOCK_MS,
   getWheelBoundaryAction,
   getWheelDelta,
   getWheelInputKind,
@@ -27,7 +28,7 @@ const MAX_ZOOM = 5.4
 const WHEEL_SENSITIVITY = 0.0026
 const PINCH_WHEEL_SENSITIVITY = 0.004
 const MAX_WHEEL_DELTA = 92
-const WHEEL_ZOOM_SESSION_MS = 420
+const WHEEL_ZOOM_SESSION_MS = MOUSE_WHEEL_ZOOM_LOCK_MS
 const ZOOM_SYNC_DELAY = 180
 const REDRAW_IDLE_DELAY = 160
 const DEFAULT_ZOOM = { scale: 1, x: 0, y: 0 }
@@ -331,20 +332,19 @@ export default function JourneyGlobe({ posts }) {
 
     const styles = lock.styles
 
+    document.documentElement.style.scrollBehavior = 'auto'
+    window.scrollTo(lock.scrollX, lock.scrollY)
+
     if (styles) {
       Object.assign(document.body.style, styles.body)
       document.documentElement.style.overscrollBehavior =
         styles.documentElement.overscrollBehavior
-    }
-
-    document.documentElement.style.scrollBehavior = 'auto'
-    pageScrollLockRef.current = null
-    window.scrollTo(lock.scrollX, lock.scrollY)
-
-    if (styles) {
+      window.scrollTo(lock.scrollX, lock.scrollY)
       document.documentElement.style.scrollBehavior =
         styles.documentElement.scrollBehavior
     }
+
+    pageScrollLockRef.current = null
   }
 
   function applyPageScrollFreeze(lock) {
