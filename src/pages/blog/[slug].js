@@ -87,7 +87,8 @@ export default function BlogPost({ post }) {
     <Layout title={post.title}>
       <article className="blog-detail">
         <Link className="back-link" href="/blog">
-          Back to Blog
+          <span className="theme-copy-classic">Back to Blog</span>
+          <span className="theme-copy-ink">归札记</span>
         </Link>
         <div className="blog-detail-header">
           <p className="meta">

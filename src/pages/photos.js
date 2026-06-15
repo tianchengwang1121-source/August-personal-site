@@ -7,17 +7,35 @@ export default function Photos() {
     <Layout title="Photos">
       <section className="page-intro">
         <div className="page-intro-main">
-          <p className="eyebrow">Photos</p>
-          <h1>Photo archive</h1>
+          <p className="eyebrow">
+            <span className="theme-copy-classic">Photos</span>
+            <span className="theme-copy-ink">影集</span>
+          </p>
+          <h1>
+            <span className="theme-copy-classic">Photo archive</span>
+            <span className="theme-copy-ink">光影留痕</span>
+          </h1>
           <div className="page-intro-meta" aria-label="Photo categories">
-            <span>Street</span>
-            <span>Aircraft</span>
-            <span>Landscape</span>
+            <span>
+              <span className="theme-copy-classic">Street</span>
+              <span className="theme-copy-ink">街巷</span>
+            </span>
+            <span>
+              <span className="theme-copy-classic">Aircraft</span>
+              <span className="theme-copy-ink">飞羽</span>
+            </span>
+            <span>
+              <span className="theme-copy-classic">Landscape</span>
+              <span className="theme-copy-ink">山川</span>
+            </span>
           </div>
         </div>
         <div className="page-intro-mark" aria-hidden="true">
           <span>18</span>
-          <strong>Photos</strong>
+          <strong>
+            <span className="theme-copy-classic">Photos</span>
+            <span className="theme-copy-ink">帧</span>
+          </strong>
         </div>
       </section>
 
@@ -29,7 +47,10 @@ export default function Photos() {
                 <p className="eyebrow">{collection.label}</p>
                 <h2>{collection.title}</h2>
               </div>
-              <span>{collection.count} photos</span>
+              <span>
+                <span className="theme-copy-classic">{collection.count} photos</span>
+                <span className="theme-copy-ink">{collection.count} 帧</span>
+              </span>
             </div>
             <div className="photo-masonry">
               {collection.images.map((image, index) => (

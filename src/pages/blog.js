@@ -8,17 +8,35 @@ export default function Blog() {
     <Layout title="Blog">
       <section className="page-intro">
         <div className="page-intro-main">
-          <p className="eyebrow">Blog</p>
-          <h1>Notes</h1>
+          <p className="eyebrow">
+            <span className="theme-copy-classic">Blog</span>
+            <span className="theme-copy-ink">札记</span>
+          </p>
+          <h1>
+            <span className="theme-copy-classic">Notes</span>
+            <span className="theme-copy-ink">云程杂录</span>
+          </h1>
           <div className="page-intro-meta" aria-label="Blog categories">
-            <span>Travel</span>
-            <span>Photos</span>
-            <span>Aviation</span>
+            <span>
+              <span className="theme-copy-classic">Travel</span>
+              <span className="theme-copy-ink">行旅</span>
+            </span>
+            <span>
+              <span className="theme-copy-classic">Photos</span>
+              <span className="theme-copy-ink">影像</span>
+            </span>
+            <span>
+              <span className="theme-copy-classic">Aviation</span>
+              <span className="theme-copy-ink">航空</span>
+            </span>
           </div>
         </div>
         <div className="page-intro-mark" aria-hidden="true">
           <span>06</span>
-          <strong>Posts</strong>
+          <strong>
+            <span className="theme-copy-classic">Posts</span>
+            <span className="theme-copy-ink">卷</span>
+          </strong>
         </div>
       </section>
       <section className="blog-grid">

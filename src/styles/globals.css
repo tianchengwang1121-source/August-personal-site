@@ -304,7 +304,10 @@ html[data-home-theme='ink'] .nav-external {
 
 .theme-orb,
 .theme-calligraphy,
-.theme-scanline {
+.theme-scanline,
+.theme-cyberline,
+.theme-cyber-kanji,
+.theme-cyber-rain {
   position: absolute;
 }
 
@@ -333,6 +336,12 @@ html[data-home-theme='ink'] .nav-external {
 }
 
 .theme-scanline {
+  display: none;
+}
+
+.theme-cyberline,
+.theme-cyber-kanji,
+.theme-cyber-rain {
   display: none;
 }
 
@@ -379,8 +388,13 @@ html[data-home-theme='ink'] .nav-external {
 
 .home-name-ink,
 .home-label-ink,
-.home-copy-ink {
+.home-copy-ink,
+.theme-copy-ink {
   display: none;
+}
+
+.theme-copy-classic {
+  display: inline;
 }
 
 .theme-stage[data-home-theme='neon'] {
@@ -399,12 +413,39 @@ html[data-home-theme='ink'] .nav-external {
   --theme-glow: rgba(79, 246, 255, 0.5);
   color: var(--text);
   background:
-    radial-gradient(circle at var(--cursor-x) var(--cursor-y), rgba(57, 225, 255, 0.34), transparent 24rem),
-    radial-gradient(circle at 14% 20%, rgba(128, 87, 255, 0.18), transparent 19rem),
+    radial-gradient(circle at var(--cursor-x) var(--cursor-y), rgba(255, 37, 202, 0.28), transparent 18rem),
+    radial-gradient(circle at calc(var(--cursor-x) + 12%) calc(var(--cursor-y) + 10%), rgba(57, 225, 255, 0.38), transparent 24rem),
+    radial-gradient(circle at 14% 20%, rgba(128, 87, 255, 0.24), transparent 19rem),
+    radial-gradient(circle at 86% 16%, rgba(255, 191, 0, 0.16), transparent 14rem),
     linear-gradient(90deg, rgba(92, 236, 255, 0.12) 1px, transparent 1px),
     linear-gradient(180deg, rgba(92, 236, 255, 0.1) 1px, transparent 1px),
     linear-gradient(135deg, #070a12 0%, #091629 48%, #04060b 100%);
   background-size: auto, 44px 44px, 44px 44px, auto;
+}
+
+.theme-stage[data-home-theme='neon'] .theme-backdrop::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(115deg, transparent 0 42%, rgba(255, 37, 202, 0.12) 42% 43%, transparent 43% 100%),
+    linear-gradient(65deg, transparent 0 58%, rgba(79, 246, 255, 0.13) 58% 59%, transparent 59% 100%);
+  clip-path: polygon(0 0, 100% 0, 100% 78%, 0 100%);
+}
+
+.theme-stage[data-home-theme='neon'] .theme-backdrop::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.03) 0,
+    rgba(255, 255, 255, 0.03) 1px,
+    transparent 1px,
+    transparent 7px
+  );
+  opacity: 0.5;
+  mix-blend-mode: screen;
 }
 
 .theme-stage[data-home-theme='neon'] .theme-backdrop,
@@ -434,6 +475,56 @@ html[data-home-theme='ink'] .nav-external {
   animation: neon-scan 4s linear infinite;
 }
 
+.theme-stage[data-home-theme='neon'] .theme-cyberline,
+.theme-stage[data-home-theme='neon'] .theme-cyber-kanji,
+.theme-stage[data-home-theme='neon'] .theme-cyber-rain {
+  display: block;
+  color: rgba(79, 246, 255, 0.32);
+  font-family: 'SFMono-Regular', 'Roboto Mono', Consolas, monospace;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-shadow:
+    0 0 14px rgba(79, 246, 255, 0.42),
+    0 0 26px rgba(255, 37, 202, 0.2);
+}
+
+.theme-stage[data-home-theme='neon'] .theme-cyberline-one {
+  top: 19vh;
+  left: 3vw;
+  font-size: clamp(0.7rem, 1.1vw, 0.9rem);
+  transform: rotate(-90deg);
+  transform-origin: left top;
+}
+
+.theme-stage[data-home-theme='neon'] .theme-cyberline-two {
+  right: 5vw;
+  bottom: 22vh;
+  font-size: clamp(0.64rem, 1vw, 0.82rem);
+  transform: rotate(90deg);
+  transform-origin: right bottom;
+}
+
+.theme-stage[data-home-theme='neon'] .theme-cyber-kanji {
+  right: 8vw;
+  top: 11vh;
+  color: rgba(255, 37, 202, 0.22);
+  font-family: 'Hiragino Sans', 'PingFang SC', sans-serif;
+  font-size: clamp(4rem, 12vw, 10rem);
+  letter-spacing: 0;
+  line-height: 1;
+}
+
+.theme-stage[data-home-theme='neon'] .theme-cyber-rain {
+  left: 8vw;
+  bottom: 10vh;
+  width: min(520px, 70vw);
+  color: rgba(255, 191, 0, 0.24);
+  font-size: 0.78rem;
+  line-height: 1.9;
+  text-transform: uppercase;
+  animation: cyber-flicker 2.4s steps(2, end) infinite;
+}
+
 .theme-stage[data-home-theme='neon'] .theme-console,
 .theme-stage[data-home-theme='neon'] .theme-switcher,
 .theme-stage[data-home-theme='neon'] .panel,
@@ -451,9 +542,34 @@ html[data-home-theme='ink'] .nav-external {
 }
 
 .theme-stage[data-home-theme='neon'] h1 {
+  color: #fff8fe;
+  font-family: 'Arial Narrow', 'Rajdhani', 'Orbitron', 'SF Pro Display', sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
   text-shadow:
-    0 0 24px rgba(79, 246, 255, 0.5),
-    0 0 86px rgba(128, 87, 255, 0.34);
+    0 0 3px rgba(255, 255, 255, 0.9),
+    0 0 12px rgba(79, 246, 255, 0.8),
+    0 0 32px rgba(255, 37, 202, 0.72),
+    0 0 86px rgba(128, 87, 255, 0.42);
+  animation: neon-title-flicker 5.8s linear infinite;
+}
+
+.theme-stage[data-home-theme='neon'] h2,
+.theme-stage[data-home-theme='neon'] h3,
+.theme-stage[data-home-theme='neon'] .site-mark,
+.theme-stage[data-home-theme='neon'] .theme-console strong {
+  font-family: 'Arial Narrow', 'Rajdhani', 'Orbitron', 'SF Pro Display', sans-serif;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.theme-stage[data-home-theme='neon'] .theme-console,
+.theme-stage[data-home-theme='neon'] .site-header {
+  box-shadow:
+    0 0 0 1px rgba(79, 246, 255, 0.18),
+    0 0 28px rgba(79, 246, 255, 0.13),
+    0 0 52px rgba(255, 37, 202, 0.1);
 }
 
 .theme-stage[data-home-theme='neon'] .site-main::before {
@@ -519,7 +635,8 @@ html[data-home-theme='ink'] .nav-external {
     var(--surface);
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.02),
-    0 0 34px rgba(79, 246, 255, 0.09);
+    0 0 34px rgba(79, 246, 255, 0.12),
+    12px 12px 0 rgba(255, 37, 202, 0.035);
 }
 
 .theme-stage[data-home-theme='neon'] .journey-map-land {
@@ -556,7 +673,7 @@ html[data-home-theme='ink'] .nav-external {
   --theme-accent-soft: rgba(32, 24, 18, 0.1);
   --theme-glow: rgba(91, 66, 38, 0.22);
   background:
-    radial-gradient(circle at var(--cursor-x) var(--cursor-y), rgba(20, 15, 10, 0.22), transparent 18rem),
+    radial-gradient(circle at var(--cursor-x) var(--cursor-y), rgba(20, 15, 10, 0.28), transparent 13rem),
     radial-gradient(circle at 18% 24%, rgba(15, 13, 10, 0.24), transparent 18rem),
     radial-gradient(circle at 88% 18%, rgba(153, 114, 61, 0.22), transparent 15rem),
     linear-gradient(120deg, rgba(255, 255, 255, 0.18), rgba(213, 196, 157, 0.58)),
@@ -593,7 +710,7 @@ html[data-home-theme='ink'] .nav-external {
   right: min(5vw, 64px);
   top: 12vh;
   color: rgba(18, 14, 10, 0.13);
-  font-family: 'Songti SC', 'STKaiti', 'KaiTi', 'Kaiti SC', serif;
+  font-family: 'HanziPen SC', 'STXingkai', 'Xingkai SC', 'Kaiti SC', 'KaiTi', cursive;
   font-size: clamp(5.8rem, 18vw, 17rem);
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -619,14 +736,23 @@ html[data-home-theme='ink'] .nav-external {
 .theme-stage[data-home-theme='ink'] h1,
 .theme-stage[data-home-theme='ink'] h2,
 .theme-stage[data-home-theme='ink'] h3 {
-  font-family: 'Songti SC', 'STKaiti', 'KaiTi', 'Kaiti SC', serif;
-  font-weight: 650;
+  font-family: 'HanziPen SC', 'STXingkai', 'Xingkai SC', 'Kaiti SC', 'KaiTi', cursive;
+  font-weight: 500;
+  letter-spacing: 0.08em;
 }
 
 .theme-stage[data-home-theme='ink'] body,
 .theme-stage[data-home-theme='ink'],
 html[data-home-theme='ink'] body {
-  font-family: 'Songti SC', 'STKaiti', 'KaiTi', 'Kaiti SC', serif;
+  font-family: 'HanziPen SC', 'STKaiti', 'Kaiti SC', 'KaiTi', 'Songti SC', serif;
+}
+
+.theme-stage[data-home-theme='ink'] .theme-copy-classic {
+  display: none;
+}
+
+.theme-stage[data-home-theme='ink'] .theme-copy-ink {
+  display: inline;
 }
 
 .theme-stage[data-home-theme='ink'] .home-name-classic,
@@ -723,6 +849,35 @@ html[data-home-theme='ink'] body {
 .theme-stage[data-home-theme='ink'] .eyebrow,
 .theme-stage[data-home-theme='ink'] .meta {
   letter-spacing: 0.18em;
+}
+
+.theme-stage[data-home-theme='ink'] p,
+.theme-stage[data-home-theme='ink'] li,
+.theme-stage[data-home-theme='ink'] figcaption,
+.theme-stage[data-home-theme='ink'] .nav-link,
+.theme-stage[data-home-theme='ink'] .theme-option,
+.theme-stage[data-home-theme='ink'] .footer-signature {
+  font-family: 'HanziPen SC', 'STKaiti', 'Kaiti SC', 'KaiTi', 'Songti SC', serif;
+}
+
+.theme-stage[data-home-theme='ink'] .about-ink-prose {
+  display: grid;
+  gap: 14px;
+}
+
+.theme-stage[data-home-theme='ink'] .about-ink-prose p {
+  color: #31251a;
+  font-size: clamp(1.08rem, 1.8vw, 1.28rem);
+  line-height: 2.15;
+  text-indent: 2em;
+}
+
+.theme-stage[data-home-theme='ink'] .page-intro h1,
+.theme-stage[data-home-theme='ink'] .hero h1 {
+  color: #17110b;
+  text-shadow:
+    0 1px 0 rgba(255, 249, 230, 0.5),
+    0 10px 22px rgba(36, 25, 14, 0.13);
 }
 
 .hero {
@@ -3153,6 +3308,35 @@ html[data-home-theme='ink'] .footer-watermark {
   }
   to {
     transform: translateY(120%);
+  }
+}
+
+@keyframes neon-title-flicker {
+  0%,
+  7%,
+  10%,
+  13%,
+  45%,
+  48%,
+  100% {
+    opacity: 1;
+    filter: saturate(1.18);
+  }
+  8%,
+  12%,
+  46% {
+    opacity: 0.72;
+    filter: saturate(0.72);
+  }
+}
+
+@keyframes cyber-flicker {
+  0%,
+  100% {
+    opacity: 0.28;
+  }
+  50% {
+    opacity: 0.68;
   }
 }
 

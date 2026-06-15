@@ -12,17 +12,35 @@ export default function Timeline() {
     <Layout title="Timeline">
       <section className="page-intro">
         <div className="page-intro-main">
-          <p className="eyebrow">Timeline</p>
-          <h1>Experience records</h1>
+          <p className="eyebrow">
+            <span className="theme-copy-classic">Timeline</span>
+            <span className="theme-copy-ink">行年</span>
+          </p>
+          <h1>
+            <span className="theme-copy-classic">Experience records</span>
+            <span className="theme-copy-ink">岁月行藏</span>
+          </h1>
           <div className="page-intro-meta" aria-label="Timeline categories">
-            <span>Travel</span>
-            <span>Aviation</span>
-            <span>Records</span>
+            <span>
+              <span className="theme-copy-classic">Travel</span>
+              <span className="theme-copy-ink">远游</span>
+            </span>
+            <span>
+              <span className="theme-copy-classic">Aviation</span>
+              <span className="theme-copy-ink">逐翼</span>
+            </span>
+            <span>
+              <span className="theme-copy-classic">Records</span>
+              <span className="theme-copy-ink">纪事</span>
+            </span>
           </div>
         </div>
         <div className="page-intro-mark" aria-hidden="true">
           <span>06</span>
-          <strong>Logs</strong>
+          <strong>
+            <span className="theme-copy-classic">Logs</span>
+            <span className="theme-copy-ink">记</span>
+          </strong>
         </div>
       </section>
       <section className="timeline-page-list" aria-label="Experience timeline">

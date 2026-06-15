@@ -62,6 +62,10 @@ export default function ThemeShell({ children }) {
       x: ((event.clientX - rect.left) / rect.width) * 100,
       y: ((event.clientY - rect.top) / rect.height) * 100,
     }
+    const viewportPointer = {
+      x: (event.clientX / window.innerWidth) * 100,
+      y: (event.clientY / window.innerHeight) * 100,
+    }
 
     setPointer(nextPointer)
 
@@ -71,8 +75,8 @@ export default function ThemeShell({ children }) {
 
     const mark = {
       id: `${Date.now()}-${Math.random()}`,
-      x: nextPointer.x,
-      y: nextPointer.y,
+      x: viewportPointer.x,
+      y: viewportPointer.y,
       rotate: -24 + Math.random() * 48,
       scale: 0.72 + Math.random() * 0.72,
     }
@@ -102,6 +106,10 @@ export default function ThemeShell({ children }) {
         <span className="theme-orb theme-orb-two" />
         <span className="theme-calligraphy">王天诚</span>
         <span className="theme-scanline" />
+        <span className="theme-cyberline theme-cyberline-one">AUGUST // HKG // FLIGHT LOG</span>
+        <span className="theme-cyberline theme-cyberline-two">SIGNAL: PERSONAL ARCHIVE</span>
+        <span className="theme-cyber-kanji">未来</span>
+        <span className="theme-cyber-rain">0101 1100  AIRFRAME  CITYLIGHT  VECTOR  HORIZON</span>
       </div>
 
       <div className="theme-ink-trail" aria-hidden="true">
