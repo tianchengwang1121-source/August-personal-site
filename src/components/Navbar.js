@@ -3,13 +3,22 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { externalLinks, navItems, siteProfile } from '@/data/site'
 
-export default function Navbar() {
+const inkNavLabels = {
+  Home: '归卷',
+  About: '其人',
+  Blog: '札记',
+  Timeline: '行年',
+  Photos: '影集',
+}
+
+export default function Navbar({ theme = 'classic' }) {
   const router = useRouter()
+  const isInk = theme === 'ink'
 
   return (
     <header className="site-header">
       <Link href="/about" className="site-mark" aria-label="About August">
-        <span>{siteProfile.mark}</span>
+        <span>{isInk ? '王天诚' : siteProfile.mark}</span>
         <Image
           className="site-mark-avatar"
           src={siteProfile.avatar}
@@ -32,7 +41,7 @@ export default function Navbar() {
               href={item.href}
               className={isActive ? 'nav-link active' : 'nav-link'}
             >
-              {item.label}
+              {isInk ? inkNavLabels[item.label] || item.label : item.label}
             </Link>
           )
         })}
@@ -43,7 +52,7 @@ export default function Navbar() {
           rel="noopener noreferrer"
         >
           <span className="jetphotos-icon" aria-hidden="true" />
-          {externalLinks.jetphotos.label}
+          {isInk ? '航影' : externalLinks.jetphotos.label}
         </a>
       </nav>
     </header>

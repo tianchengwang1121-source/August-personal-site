@@ -3,6 +3,7 @@ import Link from 'next/link'
 import BlogInteractions from '@/components/BlogInteractions'
 import Layout from '@/components/Layout'
 import { blogPosts } from '@/data/site'
+import { getThemedPost } from '@/data/themeCopy'
 
 function BlogImage({ image, className = '' }) {
   const variantClass = image.variant
@@ -85,15 +86,20 @@ function BlogContent({ post }) {
 export default function BlogPost({ post }) {
   return (
     <Layout title={post.title}>
+      {(theme) => {
+        const displayPost = getThemedPost(post, theme)
+
+        return (
       <article className="blog-detail">
         <Link className="back-link" href="/blog">
-          Back to Blog
+          <span className="theme-copy-classic">Back to Blog</span>
+          <span className="theme-copy-ink">归札记</span>
         </Link>
         <div className="blog-detail-header">
           <p className="meta">
-            {post.date} · {post.location}
+            {post.date} · {displayPost.location}
           </p>
-          <h1>{post.title}</h1>
+          <h1>{displayPost.title}</h1>
           {post.tags && (
             <div className="blog-detail-tags" aria-label="Post tags">
               {post.tags.map((tag) => (
@@ -105,16 +111,18 @@ export default function BlogPost({ post }) {
         <div className="blog-hero-image">
           <Image
             src={post.image}
-            alt={post.title}
+            alt={displayPost.title}
             width={1350}
             height={1800}
             priority
             sizes="(max-width: 760px) calc(100vw - 56px), 920px"
           />
         </div>
-        <BlogContent post={post} />
+        <BlogContent post={displayPost} />
         <BlogInteractions slug={post.slug} />
       </article>
+        )
+      }}
     </Layout>
   )
 }
