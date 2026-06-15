@@ -1,17 +1,8 @@
-import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import JourneyGlobe from '@/components/JourneyGlobe'
 import Layout from '@/components/Layout'
 import { blogPosts, externalLinks, siteProfile } from '@/data/site'
-
-const homeThemes = [
-  { id: 'classic', label: 'Classic', note: 'quiet archive' },
-  { id: 'neon', label: 'Neon', note: 'future signal' },
-  { id: 'ink', label: 'Ink', note: 'brush garden' },
-]
-
-const themeStorageKey = 'august-home-theme'
 
 function formatHomeDate(date) {
   return date
@@ -21,9 +12,6 @@ function formatHomeDate(date) {
 }
 
 export default function Home() {
-  const [theme, setTheme] = useState('classic')
-  const [pointer, setPointer] = useState({ x: 50, y: 34 })
-  const [keyBursts, setKeyBursts] = useState([])
   const featuredPost =
     blogPosts.find((post) => post.slug === 'singapore-airshow') || blogPosts[0]
   const writingPreviewPosts = [
@@ -32,131 +20,39 @@ export default function Home() {
   ].slice(0, 2)
   const timelinePreviewPosts = blogPosts.slice(0, 4)
 
-  useEffect(() => {
-    const storedTheme = window.localStorage.getItem(themeStorageKey)
-
-    if (homeThemes.some((item) => item.id === storedTheme)) {
-      setTheme(storedTheme)
-    }
-  }, [])
-
-  useEffect(() => {
-    window.localStorage.setItem(themeStorageKey, theme)
-    document.documentElement.dataset.homeTheme = theme
-
-    return () => {
-      delete document.documentElement.dataset.homeTheme
-    }
-  }, [theme])
-
-  useEffect(() => {
-    const handleKeyDown = (event) => {
-      if (theme === 'classic' || event.metaKey || event.ctrlKey || event.altKey) {
-        return
-      }
-
-      const key =
-        event.key.length === 1 ? event.key.toUpperCase() : event.key.replace('Arrow', '')
-      const burst = {
-        id: `${Date.now()}-${Math.random()}`,
-        key,
-        x: 14 + Math.random() * 72,
-        y: 18 + Math.random() * 54,
-      }
-
-      setKeyBursts((items) => [...items.slice(-9), burst])
-      window.setTimeout(() => {
-        setKeyBursts((items) => items.filter((item) => item.id !== burst.id))
-      }, 1100)
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [theme])
-
-  const handlePointerMove = (event) => {
-    const rect = event.currentTarget.getBoundingClientRect()
-    setPointer({
-      x: ((event.clientX - rect.left) / rect.width) * 100,
-      y: ((event.clientY - rect.top) / rect.height) * 100,
-    })
-  }
-
   return (
     <Layout title="Home">
-      <div
-        className="home-theme-stage"
-        data-home-theme={theme}
-        onMouseMove={handlePointerMove}
-        style={{
-          '--cursor-x': `${pointer.x}%`,
-          '--cursor-y': `${pointer.y}%`,
-          '--tilt-x': `${(pointer.y - 50) * -0.035}deg`,
-          '--tilt-y': `${(pointer.x - 50) * 0.035}deg`,
-          '--drift-x': `${(pointer.x - 50) * 0.02}px`,
-          '--drift-y': `${(pointer.y - 50) * 0.02}px`,
-        }}
-      >
-        <div className="theme-backdrop" aria-hidden="true">
-          <span className="theme-orb theme-orb-one" />
-          <span className="theme-orb theme-orb-two" />
-          <span className="theme-calligraphy">August</span>
-          <span className="theme-scanline" />
-        </div>
-
-        <div className="theme-key-layer" aria-hidden="true">
-          {keyBursts.map((burst) => (
-            <span
-              className="theme-key-burst"
-              key={burst.id}
-              style={{
-                left: `${burst.x}%`,
-                top: `${burst.y}%`,
-              }}
-            >
-              {burst.key}
-            </span>
-          ))}
-        </div>
-
-        <section className="theme-console" aria-label="Homepage theme selector">
-          <div>
-            <p className="eyebrow">Visual mode</p>
-            <strong>{homeThemes.find((item) => item.id === theme)?.label}</strong>
-          </div>
-          <div className="theme-switcher" role="group" aria-label="Choose homepage theme">
-            {homeThemes.map((item) => (
-              <button
-                type="button"
-                key={item.id}
-                className={theme === item.id ? 'theme-option is-active' : 'theme-option'}
-                onClick={() => setTheme(item.id)}
-                aria-pressed={theme === item.id}
-                title={item.note}
-              >
-                <span>{item.label}</span>
-              </button>
-            ))}
-          </div>
-        </section>
-
+      <>
         <section className="hero">
           <div className="hero-text">
-            <p className="eyebrow">Personal homepage</p>
-            <h1>{siteProfile.name}</h1>
+            <p className="eyebrow home-label-classic">Personal homepage</p>
+            <p className="eyebrow home-label-ink">清游小记</p>
+            <h1>
+              <span className="home-name-classic">{siteProfile.name}</span>
+              <span className="home-name-ink">王天诚</span>
+            </h1>
             <div className="hero-profile" aria-label="Education background">
-              <p>{siteProfile.education.school}</p>
-              <p>{siteProfile.education.program}</p>
+              <p className="home-copy-classic">{siteProfile.education.school}</p>
+              <p className="home-copy-classic">{siteProfile.education.program}</p>
+              <p className="home-copy-ink">香江问学，云端逐翼。</p>
+              <p className="home-copy-ink">以镜收山海，以笔记风尘。</p>
             </div>
             <div className="hero-actions" aria-label="Featured sections">
-              <Link href="/blog">Read Blog</Link>
-              <Link href="/timeline">View Timeline</Link>
+              <Link href="/blog">
+                <span className="home-copy-classic">Read Blog</span>
+                <span className="home-copy-ink">读札记</span>
+              </Link>
+              <Link href="/timeline">
+                <span className="home-copy-classic">View Timeline</span>
+                <span className="home-copy-ink">览行年</span>
+              </Link>
               <a
                 href={externalLinks.jetphotos.href}
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                JetPhotos
+                <span className="home-copy-classic">JetPhotos</span>
+                <span className="home-copy-ink">航影</span>
               </a>
             </div>
           </div>
@@ -170,14 +66,30 @@ export default function Home() {
             <div className="art-axis art-axis-one" aria-hidden="true" />
             <div className="art-axis art-axis-two" aria-hidden="true" />
             <div className="art-glass-panel">
-              <span>Personal</span>
-              <strong>Archive</strong>
+              <span className="home-copy-classic">Personal</span>
+              <span className="home-copy-ink">一卷</span>
+              <strong>
+                <span className="home-copy-classic">Archive</span>
+                <span className="home-copy-ink">行藏</span>
+              </strong>
             </div>
             <div className="art-tags" aria-label="Archive topics">
-              <span>Travel</span>
-              <span>Photos</span>
-              <span>Stories</span>
-              <span>Projects</span>
+              <span>
+                <span className="home-copy-classic">Travel</span>
+                <span className="home-copy-ink">远游</span>
+              </span>
+              <span>
+                <span className="home-copy-classic">Photos</span>
+                <span className="home-copy-ink">影存</span>
+              </span>
+              <span>
+                <span className="home-copy-classic">Stories</span>
+                <span className="home-copy-ink">短章</span>
+              </span>
+              <span>
+                <span className="home-copy-classic">Projects</span>
+                <span className="home-copy-ink">器作</span>
+              </span>
             </div>
           </div>
         </section>
@@ -251,7 +163,7 @@ export default function Home() {
             </div>
           </article>
         </section>
-      </div>
+      </>
     </Layout>
   )
 }

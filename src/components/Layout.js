@@ -2,6 +2,7 @@ import Head from 'next/head'
 import Link from 'next/link'
 import Navbar from './Navbar'
 import SiteStats from './SiteStats'
+import ThemeShell from './ThemeShell'
 import { blogPosts, siteProfile } from '@/data/site'
 import { photoCollections } from '@/data/photos'
 
@@ -33,23 +34,36 @@ export default function Layout({ title, description, children }) {
           type="image/svg+xml"
         />
       </Head>
-      <Navbar />
-      <main className="site-main">{children}</main>
-      <footer className="site-footer">
-        <div className="footer-signature">
-          <span>
-            © 2026 {siteProfile.name}
-            <Link
-              className="footer-admin-entry"
-              href="/admin/comments"
-              aria-label="Comment admin"
-              title="Comment admin"
-            />
-          </span>
-          <span>Personal homepage and archive.</span>
-        </div>
-        <SiteStats staticStats={footerStats} />
-      </footer>
+      <ThemeShell>
+        {(theme) => (
+          <>
+            <Navbar theme={theme} />
+            <main className="site-main">{children}</main>
+            <footer className="site-footer">
+              <div className="footer-signature">
+                <span>
+                  © 2026 {theme === 'ink' ? '王天诚' : siteProfile.name}
+                  <Link
+                    className="footer-admin-entry"
+                    href="/admin/comments"
+                    aria-label="Comment admin"
+                    title="Comment admin"
+                  />
+                </span>
+                <span>
+                  {theme === 'ink'
+                    ? '一笺行旅，半卷云烟。'
+                    : 'Personal homepage and archive.'}
+                </span>
+              </div>
+              <SiteStats staticStats={footerStats} />
+              <div className="footer-watermark" aria-hidden="true">
+                sp-zh
+              </div>
+            </footer>
+          </>
+        )}
+      </ThemeShell>
     </>
   )
 }
