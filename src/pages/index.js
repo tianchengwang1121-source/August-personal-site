@@ -25,15 +25,27 @@ export default function Home() {
       <>
         <section className="hero">
           <div className="hero-text">
-            <p className="eyebrow home-label-classic">Personal homepage</p>
+            <p className="eyebrow home-label-classic theme-has-neon">
+              <span className="theme-copy-classic">Personal homepage</span>
+              <span className="theme-copy-neon">NODE: HOME / ARCHIVE ONLINE</span>
+            </p>
             <p className="eyebrow home-label-ink">清游小记</p>
             <h1>
-              <span className="home-name-classic">{siteProfile.name}</span>
+              <span className="home-name-classic theme-has-neon">
+                <span className="theme-copy-classic">{siteProfile.name}</span>
+                <span className="theme-copy-neon">AUGUST.EXE</span>
+              </span>
               <span className="home-name-ink">王天诚</span>
             </h1>
             <div className="hero-profile" aria-label="Education background">
-              <p className="home-copy-classic">{siteProfile.education.school}</p>
-              <p className="home-copy-classic">{siteProfile.education.program}</p>
+              <p className="home-copy-classic theme-has-neon">
+                <span className="theme-copy-classic">{siteProfile.education.school}</span>
+                <span className="theme-copy-neon">POLYU / AAE / HKG</span>
+              </p>
+              <p className="home-copy-classic theme-has-neon">
+                <span className="theme-copy-classic">{siteProfile.education.program}</span>
+                <span className="theme-copy-neon">FLIGHT · CITY · CAMERA · SIGNAL</span>
+              </p>
               <p className="home-copy-ink">香江问学，云端逐翼。</p>
               <p className="home-copy-ink">以镜收山海，以笔记风尘。</p>
             </div>

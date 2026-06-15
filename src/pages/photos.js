@@ -7,12 +7,14 @@ export default function Photos() {
     <Layout title="Photos">
       <section className="page-intro">
         <div className="page-intro-main">
-          <p className="eyebrow">
+          <p className="eyebrow theme-has-neon">
             <span className="theme-copy-classic">Photos</span>
+            <span className="theme-copy-neon">IMAGE BANK</span>
             <span className="theme-copy-ink">影集</span>
           </p>
-          <h1>
+          <h1 className="theme-has-neon">
             <span className="theme-copy-classic">Photo archive</span>
+            <span className="theme-copy-neon">VISUAL CACHE</span>
             <span className="theme-copy-ink">光影留痕</span>
           </h1>
           <div className="page-intro-meta" aria-label="Photo categories">

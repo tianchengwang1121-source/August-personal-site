@@ -8,12 +8,14 @@ export default function Blog() {
     <Layout title="Blog">
       <section className="page-intro">
         <div className="page-intro-main">
-          <p className="eyebrow">
+          <p className="eyebrow theme-has-neon">
             <span className="theme-copy-classic">Blog</span>
+            <span className="theme-copy-neon">LOG FEED</span>
             <span className="theme-copy-ink">札记</span>
           </p>
-          <h1>
+          <h1 className="theme-has-neon">
             <span className="theme-copy-classic">Notes</span>
+            <span className="theme-copy-neon">FIELD NOTES</span>
             <span className="theme-copy-ink">云程杂录</span>
           </h1>
           <div className="page-intro-meta" aria-label="Blog categories">

@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Liu+Jian+Mao+Cao&family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&family=Zhi+Mang+Xing&display=swap');
+
 :root {
   --background: #f7f8fa;
   --surface: #ffffff;
@@ -389,7 +391,9 @@ html[data-home-theme='ink'] .nav-external {
 .home-name-ink,
 .home-label-ink,
 .home-copy-ink,
-.theme-copy-ink {
+.theme-copy-ink,
+.theme-copy-neon,
+.theme-copy-neon-block {
   display: none;
 }
 
@@ -543,7 +547,7 @@ html[data-home-theme='ink'] .nav-external {
 
 .theme-stage[data-home-theme='neon'] h1 {
   color: #fff8fe;
-  font-family: 'Arial Narrow', 'Rajdhani', 'Orbitron', 'SF Pro Display', sans-serif;
+  font-family: 'Orbitron', 'Rajdhani', 'Arial Narrow', 'SF Pro Display', sans-serif;
   font-weight: 800;
   letter-spacing: 0.035em;
   text-transform: uppercase;
@@ -559,9 +563,65 @@ html[data-home-theme='ink'] .nav-external {
 .theme-stage[data-home-theme='neon'] h3,
 .theme-stage[data-home-theme='neon'] .site-mark,
 .theme-stage[data-home-theme='neon'] .theme-console strong {
-  font-family: 'Arial Narrow', 'Rajdhani', 'Orbitron', 'SF Pro Display', sans-serif;
+  font-family: 'Orbitron', 'Rajdhani', 'Arial Narrow', 'SF Pro Display', sans-serif;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+}
+
+.theme-stage[data-home-theme='neon'] p,
+.theme-stage[data-home-theme='neon'] li,
+.theme-stage[data-home-theme='neon'] time,
+.theme-stage[data-home-theme='neon'] .nav-link,
+.theme-stage[data-home-theme='neon'] .theme-option,
+.theme-stage[data-home-theme='neon'] .meta,
+.theme-stage[data-home-theme='neon'] .eyebrow {
+  font-family: 'Share Tech Mono', 'Rajdhani', 'SFMono-Regular', Consolas, monospace;
+}
+
+.theme-stage[data-home-theme='neon'] .theme-has-neon > .theme-copy-classic,
+.theme-stage[data-home-theme='neon'] .theme-has-neon > .theme-copy-ink {
+  display: none;
+}
+
+.theme-stage[data-home-theme='neon'] .theme-has-neon > .theme-copy-neon {
+  display: inline;
+}
+
+.theme-stage[data-home-theme='neon'] .theme-copy-neon-block {
+  display: block;
+}
+
+.theme-stage[data-home-theme='neon'] .about-story > .theme-copy-classic,
+.theme-stage[data-home-theme='neon'] .blog-content .blog-paragraph {
+  display: none;
+}
+
+.theme-stage[data-home-theme='neon'] .about-neon-prose {
+  display: grid;
+  gap: 8px;
+}
+
+.theme-stage[data-home-theme='neon'] .about-neon-prose p {
+  width: fit-content;
+  padding: 8px 10px;
+  border: 1px solid rgba(79, 246, 255, 0.22);
+  background: rgba(4, 10, 19, 0.56);
+  color: #dff8ff;
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+}
+
+.theme-stage[data-home-theme='neon'] .blog-story-section {
+  min-height: 180px;
+}
+
+.theme-stage[data-home-theme='neon'] .blog-story-section h2::after {
+  content: ' // DATA FRAGMENT';
+  color: rgba(255, 37, 202, 0.72);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
 }
 
 .theme-stage[data-home-theme='neon'] .theme-console,
@@ -710,7 +770,7 @@ html[data-home-theme='ink'] .nav-external {
   right: min(5vw, 64px);
   top: 12vh;
   color: rgba(18, 14, 10, 0.13);
-  font-family: 'HanziPen SC', 'STXingkai', 'Xingkai SC', 'Kaiti SC', 'KaiTi', cursive;
+  font-family: 'Liu Jian Mao Cao', 'STXingkai', 'Xingkai SC', cursive;
   font-size: clamp(5.8rem, 18vw, 17rem);
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -736,7 +796,7 @@ html[data-home-theme='ink'] .nav-external {
 .theme-stage[data-home-theme='ink'] h1,
 .theme-stage[data-home-theme='ink'] h2,
 .theme-stage[data-home-theme='ink'] h3 {
-  font-family: 'HanziPen SC', 'STXingkai', 'Xingkai SC', 'Kaiti SC', 'KaiTi', cursive;
+  font-family: 'Liu Jian Mao Cao', 'STXingkai', 'Xingkai SC', cursive;
   font-weight: 500;
   letter-spacing: 0.08em;
 }
@@ -744,7 +804,7 @@ html[data-home-theme='ink'] .nav-external {
 .theme-stage[data-home-theme='ink'] body,
 .theme-stage[data-home-theme='ink'],
 html[data-home-theme='ink'] body {
-  font-family: 'HanziPen SC', 'STKaiti', 'Kaiti SC', 'KaiTi', 'Songti SC', serif;
+  font-family: 'Zhi Mang Xing', 'STKaiti', 'Kaiti SC', 'KaiTi', cursive;
 }
 
 .theme-stage[data-home-theme='ink'] .theme-copy-classic {
@@ -857,7 +917,7 @@ html[data-home-theme='ink'] body {
 .theme-stage[data-home-theme='ink'] .nav-link,
 .theme-stage[data-home-theme='ink'] .theme-option,
 .theme-stage[data-home-theme='ink'] .footer-signature {
-  font-family: 'HanziPen SC', 'STKaiti', 'Kaiti SC', 'KaiTi', 'Songti SC', serif;
+  font-family: 'Zhi Mang Xing', 'STKaiti', 'Kaiti SC', 'KaiTi', cursive;
 }
 
 .theme-stage[data-home-theme='ink'] .about-ink-prose {

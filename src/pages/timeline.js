@@ -12,12 +12,14 @@ export default function Timeline() {
     <Layout title="Timeline">
       <section className="page-intro">
         <div className="page-intro-main">
-          <p className="eyebrow">
+          <p className="eyebrow theme-has-neon">
             <span className="theme-copy-classic">Timeline</span>
+            <span className="theme-copy-neon">TIME GRID</span>
             <span className="theme-copy-ink">行年</span>
           </p>
-          <h1>
+          <h1 className="theme-has-neon">
             <span className="theme-copy-classic">Experience records</span>
+            <span className="theme-copy-neon">EVENT TRACE</span>
             <span className="theme-copy-ink">岁月行藏</span>
           </h1>
           <div className="page-intro-meta" aria-label="Timeline categories">

@@ -24,12 +24,14 @@ export default function About() {
     <Layout title="About">
       <section className="page-intro">
         <div className="page-intro-main">
-          <p className="eyebrow">
+          <p className="eyebrow theme-has-neon">
             <span className="theme-copy-classic">About</span>
+            <span className="theme-copy-neon">IDENTITY NODE</span>
             <span className="theme-copy-ink">小传</span>
           </p>
-          <h1>
+          <h1 className="theme-has-neon">
             <span className="theme-copy-classic">About me</span>
+            <span className="theme-copy-neon">AUGUST / PROFILE</span>
             <span className="theme-copy-ink">王天诚小记</span>
           </h1>
           <div className="page-intro-meta" aria-label="Profile summary">
@@ -69,8 +71,9 @@ export default function About() {
 
       <section className="about-content" aria-label="About August">
         <div className="about-facts panel">
-          <p className="eyebrow">
+          <p className="eyebrow theme-has-neon">
             <span className="theme-copy-classic">A few things</span>
+            <span className="theme-copy-neon">QUICK DATA</span>
             <span className="theme-copy-ink">数语记之</span>
           </p>
           <ul>
@@ -87,12 +90,14 @@ export default function About() {
 
         <section className="about-photos panel" aria-label="About snapshots">
           <div className="section-heading">
-            <p className="eyebrow">
+            <p className="eyebrow theme-has-neon">
               <span className="theme-copy-classic">Snapshots</span>
+              <span className="theme-copy-neon">VISUAL LOG</span>
               <span className="theme-copy-ink">片影</span>
             </p>
-            <h2>
+            <h2 className="theme-has-neon">
               <span className="theme-copy-classic">Places I keep</span>
+              <span className="theme-copy-neon">CAPTURED PLACES</span>
               <span className="theme-copy-ink">所至所藏</span>
             </h2>
           </div>
@@ -126,12 +131,14 @@ export default function About() {
 
         <article className="about-story panel">
           <div className="section-heading">
-            <p className="eyebrow">
+            <p className="eyebrow theme-has-neon">
               <span className="theme-copy-classic">Short introduction</span>
+              <span className="theme-copy-neon">BIO STREAM</span>
               <span className="theme-copy-ink">小序</span>
             </p>
-            <h2>
+            <h2 className="theme-has-neon">
               <span className="theme-copy-classic">Notes</span>
+              <span className="theme-copy-neon">KEY SIGNALS</span>
               <span className="theme-copy-ink">自述</span>
             </h2>
           </div>
@@ -179,6 +186,13 @@ export default function About() {
               此站如案上一卷，收其行旅，藏其照片，记其工程与偶得之思。
               他日重展，愿仍见少年看云时之心。
             </p>
+          </div>
+
+          <div className="theme-copy-neon-block about-neon-prose">
+            <p>ORIGIN: LANZHOU / WUXI / HONG KONG</p>
+            <p>CURRENT: POLYU AAE / YEAR 01</p>
+            <p>INTEREST: AIRCRAFT / CAMERA / ROAD / CITY</p>
+            <p>ARCHIVE: TRAVEL LOGS + IMAGE SIGNALS + FLIGHT NOTES</p>
           </div>
         </article>
       </section>
