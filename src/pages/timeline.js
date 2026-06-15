@@ -2,6 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import Layout from '@/components/Layout'
 import { blogPosts } from '@/data/site'
+import { getThemedPost } from '@/data/themeCopy'
 
 function getPostYear(date) {
   return date.split('.')[0]
@@ -10,6 +11,8 @@ function getPostYear(date) {
 export default function Timeline() {
   return (
     <Layout title="Timeline">
+      {(theme) => (
+      <>
       <section className="page-intro">
         <div className="page-intro-main">
           <p className="eyebrow theme-has-neon">
@@ -47,6 +50,7 @@ export default function Timeline() {
       </section>
       <section className="timeline-page-list" aria-label="Experience timeline">
         {blogPosts.map((item, index) => {
+          const displayItem = getThemedPost(item, theme)
           const year = getPostYear(item.date)
           const previousYear =
             index > 0 ? getPostYear(blogPosts[index - 1].date) : null
@@ -76,15 +80,17 @@ export default function Timeline() {
                   <span className="timeline-entry-index">
                     {String(index + 1).padStart(2, '0')}
                   </span>
-                  <p className="eyebrow">{item.category}</p>
-                  <h2>{item.displayLocation || item.location}</h2>
-                  <p>{item.title}</p>
+                  <p className="eyebrow">{displayItem.category}</p>
+                  <h2>{displayItem.displayLocation || displayItem.location}</h2>
+                  <p>{displayItem.title}</p>
                 </div>
               </Link>
             </article>
           )
         })}
       </section>
+      </>
+      )}
     </Layout>
   )
 }

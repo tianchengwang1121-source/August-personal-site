@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
 
 export const homeThemes = [
   { id: 'classic', label: 'Classic', inkLabel: '素笺', note: 'quiet archive' },
@@ -7,6 +7,11 @@ export const homeThemes = [
 ]
 
 const themeStorageKey = 'august-home-theme'
+const ThemeContext = createContext('classic')
+
+export function useTheme() {
+  return useContext(ThemeContext)
+}
 
 export default function ThemeShell({ children }) {
   const [theme, setTheme] = useState('classic')
@@ -101,73 +106,75 @@ export default function ThemeShell({ children }) {
         '--drift-y': `${(pointer.y - 50) * 0.02}px`,
       }}
     >
-      <div className="theme-backdrop" aria-hidden="true">
-        <span className="theme-orb theme-orb-one" />
-        <span className="theme-orb theme-orb-two" />
-        <span className="theme-calligraphy">王天诚</span>
-        <span className="theme-scanline" />
-        <span className="theme-cyberline theme-cyberline-one">AUGUST // HKG // FLIGHT LOG</span>
-        <span className="theme-cyberline theme-cyberline-two">SIGNAL: PERSONAL ARCHIVE</span>
-        <span className="theme-cyber-kanji">未来</span>
-        <span className="theme-cyber-rain">0101 1100  AIRFRAME  CITYLIGHT  VECTOR  HORIZON</span>
-      </div>
-
-      <div className="theme-ink-trail" aria-hidden="true">
-        {inkMarks.map((mark) => (
-          <span
-            className="theme-ink-mark"
-            key={mark.id}
-            style={{
-              left: `${mark.x}%`,
-              top: `${mark.y}%`,
-              '--mark-rotate': `${mark.rotate}deg`,
-              '--mark-scale': mark.scale,
-            }}
-          />
-        ))}
-      </div>
-
-      <div className="theme-key-layer" aria-hidden="true">
-        {keyBursts.map((burst) => (
-          <span
-            className="theme-key-burst"
-            key={burst.id}
-            style={{
-              left: `${burst.x}%`,
-              top: `${burst.y}%`,
-            }}
-          >
-            {burst.key}
-          </span>
-        ))}
-      </div>
-
-      <section className="theme-console" aria-label="Theme selector">
-        <div>
-          <p className="eyebrow">{theme === 'ink' ? '风骨' : 'Visual mode'}</p>
-          <strong>
-            {theme === 'ink'
-              ? homeThemes.find((item) => item.id === theme)?.inkLabel
-              : homeThemes.find((item) => item.id === theme)?.label}
-          </strong>
+      <ThemeContext.Provider value={theme}>
+        <div className="theme-backdrop" aria-hidden="true">
+          <span className="theme-orb theme-orb-one" />
+          <span className="theme-orb theme-orb-two" />
+          <span className="theme-calligraphy">王天诚</span>
+          <span className="theme-scanline" />
+          <span className="theme-cyberline theme-cyberline-one">AUGUST // HKG // FLIGHT LOG</span>
+          <span className="theme-cyberline theme-cyberline-two">SIGNAL: PERSONAL ARCHIVE</span>
+          <span className="theme-cyber-kanji">未来</span>
+          <span className="theme-cyber-rain">0101 1100  AIRFRAME  CITYLIGHT  VECTOR  HORIZON</span>
         </div>
-        <div className="theme-switcher" role="group" aria-label="Choose theme">
-          {homeThemes.map((item) => (
-            <button
-              type="button"
-              key={item.id}
-              className={theme === item.id ? 'theme-option is-active' : 'theme-option'}
-              onClick={() => setTheme(item.id)}
-              aria-pressed={theme === item.id}
-              title={item.note}
-            >
-              <span>{theme === 'ink' ? item.inkLabel : item.label}</span>
-            </button>
+
+        <div className="theme-ink-trail" aria-hidden="true">
+          {inkMarks.map((mark) => (
+            <span
+              className="theme-ink-mark"
+              key={mark.id}
+              style={{
+                left: `${mark.x}%`,
+                top: `${mark.y}%`,
+                '--mark-rotate': `${mark.rotate}deg`,
+                '--mark-scale': mark.scale,
+              }}
+            />
           ))}
         </div>
-      </section>
 
-      {children(theme)}
+        <div className="theme-key-layer" aria-hidden="true">
+          {keyBursts.map((burst) => (
+            <span
+              className="theme-key-burst"
+              key={burst.id}
+              style={{
+                left: `${burst.x}%`,
+                top: `${burst.y}%`,
+              }}
+            >
+              {burst.key}
+            </span>
+          ))}
+        </div>
+
+        <section className="theme-console" aria-label="Theme selector">
+          <div>
+            <p className="eyebrow">{theme === 'ink' ? '风骨' : 'Visual mode'}</p>
+            <strong>
+              {theme === 'ink'
+                ? homeThemes.find((item) => item.id === theme)?.inkLabel
+                : homeThemes.find((item) => item.id === theme)?.label}
+            </strong>
+          </div>
+          <div className="theme-switcher" role="group" aria-label="Choose theme">
+            {homeThemes.map((item) => (
+              <button
+                type="button"
+                key={item.id}
+                className={theme === item.id ? 'theme-option is-active' : 'theme-option'}
+                onClick={() => setTheme(item.id)}
+                aria-pressed={theme === item.id}
+                title={item.note}
+              >
+                <span>{theme === 'ink' ? item.inkLabel : item.label}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {children(theme)}
+      </ThemeContext.Provider>
     </div>
   )
 }

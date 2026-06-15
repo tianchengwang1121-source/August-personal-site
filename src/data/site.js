@@ -34,10 +34,8 @@ export const blogPosts = [
     displayLocation: 'Beijing',
     category: 'Blog',
     image: '/images/blog/air-force-one-beijing.jpg',
-    excerpt:
-      '一次在北京等待特殊航班的拍摄记录：从机位选择、天气判断，到按下快门前后那几秒的紧张与兴奋。',
-    body:
-      '那天的北京天空并不只是背景。为了拍到空军一号，需要提前判断航线、光线和可能出现的角度，也需要在漫长等待中保持耐心。航空摄影最迷人的地方，正在于目标出现之前的不确定，以及它真正进入取景框时的短暂、清晰和不可重来。',
+    excerpt: '这是一行测试文字，记录在北京拍摄空军一号的经历。',
+    body: '这是一行测试正文，记录在北京拍摄空军一号的经历。',
     globe: {
       city: 'Beijing',
       region: 'China',
@@ -53,10 +51,8 @@ export const blogPosts = [
     displayLocation: 'HKIA',
     category: 'Blog',
     image: '/images/blog/hkia-rescue-exercise.jpg',
-    excerpt:
-      '记录香港国际机场年度救援演习：消防、救护、机场运行与航空安全体系在同一现场协同展开。',
-    body:
-      'HKIA 年度救援演习让机场运行中平时不可见的一面被集中呈现出来。现场的车辆调度、人员协作、应急响应节奏和安全边界，都比普通航班拍摄更接近航空系统背后的组织能力。这不仅是一场演习，也是一堂关于机场安全、流程和专业分工的现场课。',
+    excerpt: '这是一行测试文字，记录 HKIA 年度救援演习。',
+    body: '这是一行测试正文，记录 HKIA 年度救援演习。',
     globe: {
       city: 'Hong Kong',
       region: 'Hong Kong',
@@ -216,10 +212,8 @@ export const blogPosts = [
     displayLocation: 'Taipei',
     category: 'Blog',
     image: '/images/blog/taipei-trip.jpg',
-    excerpt:
-      '新年第一天的台北短行，从城市街道、机场动线到旅途中偶然遇见的风景，作为一年的开篇记录。',
-    body:
-      '台北之行发生在新年的第一天，因此它更像是一段带有起点意味的记录。城市的街道、湿润的空气、沿途的交通和机场里的短暂停留，共同构成了这次旅程的节奏。它并不追求宏大的叙事，只是把新年开始时看到的几处风景认真留下。',
+    excerpt: '这是一行测试文字，记录新年第一天的台北之行。',
+    body: '这是一行测试正文，记录新年第一天的台北之行。',
     globe: {
       city: 'Taipei',
       region: 'Taiwan',
@@ -235,10 +229,8 @@ export const blogPosts = [
     displayLocation: 'Bangkok',
     category: 'Blog',
     image: '/images/blog/bangkok-trip.jpg',
-    excerpt:
-      '曼谷之行的片段记录：热带城市的密度、街头秩序、交通流动，以及旅途中不断切换的光线。',
-    body:
-      '曼谷给人的第一印象是热、密集而鲜活。街道、天桥、商场、寺庙与车流交叠在一起，让城市始终保持一种持续运转的状态。这次旅行记录的不是单一景点，而是人在陌生城市中移动时不断捕捉到的色彩、声音、气味和节奏。',
+    excerpt: '这是一行测试文字，记录这次曼谷之行。',
+    body: '这是一行测试正文，记录这次曼谷之行。',
     globe: {
       city: 'Bangkok',
       region: 'Thailand',
@@ -254,10 +246,8 @@ export const blogPosts = [
     displayLocation: 'HKIA',
     category: 'Blog',
     image: '/images/blog/lufthansa-a340-hkia.jpg',
-    excerpt:
-      '在香港机场送别汉莎 A340：一次关于四发客机、航线记忆和航空摄影仪式感的记录。',
-    body:
-      '汉莎 A340 的离场带着一种属于四发客机时代的重量感。对航空摄影来说，拍摄它不只是记录一架飞机经过，更像是在送别一种逐渐稀少的声音、比例和气质。那一天的 HKIA，跑道、海风和长焦镜头共同组成了这次告别。',
+    excerpt: '这是一行测试文字，记录在香港机场送别汉莎 A340 的一天。',
+    body: '这是一行测试正文，记录在香港机场送别汉莎 A340 的一天。',
     globe: {
       city: 'Hong Kong',
       region: 'Hong Kong',

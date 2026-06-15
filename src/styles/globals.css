@@ -591,8 +591,7 @@ html[data-home-theme='ink'] .nav-external {
   display: block;
 }
 
-.theme-stage[data-home-theme='neon'] .about-story > .theme-copy-classic,
-.theme-stage[data-home-theme='neon'] .blog-content .blog-paragraph {
+.theme-stage[data-home-theme='neon'] .about-story > .theme-copy-classic {
   display: none;
 }
 

@@ -38,7 +38,9 @@ export default function Layout({ title, description, children }) {
         {(theme) => (
           <>
             <Navbar theme={theme} />
-            <main className="site-main">{children}</main>
+            <main className="site-main">
+              {typeof children === 'function' ? children(theme) : children}
+            </main>
             <footer className="site-footer">
               <div className="footer-signature">
                 <span>

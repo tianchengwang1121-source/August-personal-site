@@ -3,6 +3,7 @@ import Link from 'next/link'
 import JourneyGlobe from '@/components/JourneyGlobe'
 import Layout from '@/components/Layout'
 import { blogPosts, externalLinks, siteProfile } from '@/data/site'
+import { getThemedPost } from '@/data/themeCopy'
 
 function formatHomeDate(date) {
   return date
@@ -22,6 +23,13 @@ export default function Home() {
 
   return (
     <Layout title="Home">
+      {(theme) => {
+        const themedPosts = blogPosts.map((post) => getThemedPost(post, theme))
+        const themedPostBySlug = new Map(
+          themedPosts.map((post) => [post.slug, post])
+        )
+
+        return (
       <>
         <section className="hero">
           <div className="hero-text">
@@ -106,7 +114,7 @@ export default function Home() {
           </div>
         </section>
 
-        <JourneyGlobe posts={blogPosts} />
+        <JourneyGlobe posts={themedPosts} />
 
         <section className="section-grid" aria-label="Homepage overview">
           <article className="panel large-panel">
@@ -131,8 +139,8 @@ export default function Home() {
                     />
                   </div>
                   <div className="home-featured-copy">
-                    <h3>{post.title}</h3>
-                    <p>{post.excerpt}</p>
+                    <h3>{themedPostBySlug.get(post.slug)?.title || post.title}</h3>
+                    <p>{themedPostBySlug.get(post.slug)?.excerpt || post.excerpt}</p>
                     <span>{formatHomeDate(post.date)}</span>
                   </div>
                   <span className="home-link-arrow" aria-hidden="true">
@@ -158,9 +166,12 @@ export default function Home() {
                   <span className="home-timeline-dot" aria-hidden="true" />
                   <div>
                     <time>{formatHomeDate(post.date)}</time>
-                    <h3>{post.title}</h3>
+                    <h3>{themedPostBySlug.get(post.slug)?.title || post.title}</h3>
                     <p>
-                      {post.displayLocation || post.location}
+                      {themedPostBySlug.get(post.slug)?.displayLocation ||
+                        themedPostBySlug.get(post.slug)?.location ||
+                        post.displayLocation ||
+                        post.location}
                       {post.globe?.region &&
                       post.globe.region !== post.displayLocation
                         ? `, ${post.globe.region}`
@@ -176,6 +187,8 @@ export default function Home() {
           </article>
         </section>
       </>
+        )
+      }}
     </Layout>
   )
 }
